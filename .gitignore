@@ -1,36 +1,7 @@
-# Build output
-build/
-
 # macOS
 .DS_Store
 .DS_Store?
 ._*
 
-# CMake
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-install_manifest.txt
-Makefile
-
-# Xcode / IDE
-*.xcodeproj/
-*.xcworkspace/
-.idea/
-.vscode/
-
-# JUCE auto-generated
-JuceLibraryCode/
-
-# Compiled plugin bundles (installed separately)
-*.component
-*.vst3
-*.au
-
-# Benchmark binary
-/bench/dsp_bench
-
-# Object files / debug
-*.o
-*.d
-*.dSYM/
+# Build artifacts (project-specific gitignores cover their own)
+build/
