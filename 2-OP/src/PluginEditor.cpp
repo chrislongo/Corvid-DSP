@@ -7,43 +7,43 @@
 namespace {
     // 4 columns across 400 px — 100 px apart, 50 px margins each side.
     // Centres at 50, 150, 250, 350.
-    static const int kColX[] = { 50, 150, 250, 350 };
+    constexpr int kColX[] = { 50, 150, 250, 350 };
 
     // ── FM slider geometry ─────────────────────────────────────────────────
-    static const int kTrackTop    = 44;
-    static const int kTrackBot    = 168;
-    static const int kTrackHeight = kTrackBot - kTrackTop;  // 124
-    static const int kTrackWidth  = 4;
+    constexpr int kTrackTop    = 44;
+    constexpr int kTrackBot    = 168;
+    constexpr int kTrackHeight = kTrackBot - kTrackTop;  // 124
+    constexpr int kTrackWidth  = 4;
 
-    static const int kThumbW      = 28;
-    static const int kThumbH      = 10;
-    static const int kTickCount   = 10;
+    constexpr int kThumbW      = 28;
+    constexpr int kThumbH      = 10;
+    constexpr int kTickCount   = 10;
 
-    static const int kSliderW     = 44;
+    constexpr int kSliderW     = 44;
     // kSliderTop = kTrackTop - thumbRadius so that sliderPos at max equals
     // localTrackTop, keeping the thumb fully inside the component at both extremes.
-    static const int kSliderTop   = kTrackTop - kThumbH / 2;       // 39
-    static const int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2; // 134
+    constexpr int kSliderTop   = kTrackTop - kThumbH / 2;       // 39
+    constexpr int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2; // 134
 
     // FM label position
-    static const int kFMLabelY    = 176;
-    static const int kFMLabelH    = 14;
+    constexpr int kFMLabelY    = 176;
+    constexpr int kFMLabelH    = 14;
 
     // ── Section separator ──────────────────────────────────────────────────
-    static const int kSeparatorY  = 210;
+    constexpr int kSeparatorY  = 210;
 
     // ── ADSR knob geometry ─────────────────────────────────────────────────
-    static const int   kKnobR     = 16;
-    static const int   kKnobCY    = 246;  // panel-coord centre-y of knob body
-    static const int   kKnobW     = kKnobR * 2 + 4;  // component size = 36
+    constexpr int   kKnobR     = 16;
+    constexpr int   kKnobCY    = 246;  // panel-coord centre-y of knob body
+    constexpr int   kKnobW     = kKnobR * 2 + 4;  // component size = 36
 
     // Rotary sweep: −135° to +135° from 12 o'clock (270° total).
-    static const float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
-    static const float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
+    constexpr float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
+    constexpr float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
 
     // ADSR label position
-    static const int kADSRLabelY  = 270;
-    static const int kADSRLabelH  = 14;
+    constexpr int kADSRLabelY  = 270;
+    constexpr int kADSRLabelH  = 14;
 }
 
 //==============================================================================

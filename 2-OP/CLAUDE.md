@@ -42,19 +42,25 @@ auval -v aumu TWOP CVDA
 
 The processor wraps Plaits' `FMEngine` — a 2-operator phase-modulation synth from the Mutable Instruments Eurorack firmware. Key details:
 
-- **Block size**: Engine processes 12 samples at a time (`plaits::kBlockSize`). `processBlock` loops over the host buffer in 12-sample chunks.
+- **Block size**: Engine processes 12 samples at a time (`plaits::kBlockSize`). `processBlock` loops over the host buffer in 12-sample chunks. Partial final chunks (when the host buffer isn't a multiple of 12) are passed directly — `FMEngine::Render` handles arbitrary sizes.
 - **Pitch correction**: Plaits' `a0` constant is derived from a hardcoded 47872.34 Hz hardware rate. A per-session correction (`12 × log2(47872.34 / hostSampleRate)`) is added to every `params.note` in `prepareToPlay`.
 - **Parameter mapping**: `ratio → params.harmonics`, `index → params.timbre`, `feedback → params.morph`. All four FM params are smoothed via `SmoothedValue<float>` (20 ms ramp). ADSR params are read raw from APVTS once per block.
+- **Velocity**: MIDI note velocity scales the output amplitude (`out * velocity_`). It is also passed to `params.accent` for Plaits' internal timbre modulation.
 - **Sub oscillator**: `aux_[]` from `engine_.Render()` is the sub (half-frequency carrier). The `sub` parameter blends it into the main output before writing to the host buffer.
+- **Trigger state**: `trigger_` tracks `TRIGGER_RISING_EDGE` (first render after note-on) → `TRIGGER_HIGH` (gate held) → `TRIGGER_LOW` (note-off). Note: `FMEngine` does not currently use the trigger field, but it is set correctly for future engine swaps.
 - **Mono safety**: `right` pointer is only obtained when `numCh > 1`. Writes to it are guarded with a null check.
 
 ### ADSR envelope (`ADSREnv` in `PluginProcessor.h`)
 
 A custom linear ADSR applied per-sample after the engine renders each chunk. `noteOn()` ramps from current level (no click on retrigger). Release captures the current level as `releaseStart` for a linear ramp to zero. The engine keeps rendering during release so the pitch is maintained.
 
+Decay case has an early-out for `s >= 1.0` — without it, a zero-length step at full sustain would cause an infinite loop in the state machine.
+
+Envelope time parameters (attack/decay/release) use a skewed `NormalisableRange` (skew = 0.3) so knob travel is concentrated at short values where most musically useful times live.
+
 ### MIDI handling
 
-Monophonic, last-note priority. `processBlock` iterates all MIDI events at block start. Note-off only triggers release if the released note matches `sounding_note_`. Pitch bend is ±2 semitones.
+Monophonic, last-note priority. MIDI events are processed **at their exact `samplePosition`** within the host buffer — the render loop splits the buffer at each event boundary so timing is sample-accurate. Note-off only triggers release if the released note matches `sounding_note_`. Pitch bend is ±2 semitones.
 
 ### Editor (`PluginEditor.h/.cpp`)
 

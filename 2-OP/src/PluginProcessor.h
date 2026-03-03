@@ -42,6 +42,7 @@ struct ADSREnv
             break;
         }
         case Decay: {
+            if (s >= 1.0f) { state = Sustain; break; }
             const float step = (d > 0.0f) ? (1.0f - s) / (d * sr) : (1.0f - s);
             level = std::max (level - step, s);
             if (level <= s) state = Sustain;
@@ -100,7 +101,7 @@ private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
     plaits::FMEngine engine_;
-    char engine_buffer_[256];
+    char engine_buffer_[1024];
     stmlib::BufferAllocator allocator_;
 
     float out_[plaits::kBlockSize];
@@ -113,6 +114,7 @@ private:
     float pitch_bend_semitones_ = 0.0f;
     float pitch_correction_     = 0.0f;  // compensates hardcoded Plaits a0
     bool  gate_                 = false; // true while key is physically held
+    int   trigger_              = plaits::TRIGGER_LOW;  // RISING_EDGE → HIGH → LOW
 
     ADSREnv env_;
 

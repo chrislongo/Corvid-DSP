@@ -31,11 +31,12 @@ TwoOpFMAudioProcessor::createParameterLayout()
     layout.add (std::make_unique<APF> ("feedback", "Feedback", 0.0f, 1.0f,  0.5f));
     layout.add (std::make_unique<APF> ("sub",      "Sub",      0.0f, 1.0f,  0.0f));
 
-    // Envelope parameters (times in seconds)
-    layout.add (std::make_unique<APF> ("attack",   "Attack",   0.001f, 2.0f, 0.008f));
-    layout.add (std::make_unique<APF> ("decay",    "Decay",    0.001f, 4.0f, 0.001f));
-    layout.add (std::make_unique<APF> ("sustain",  "Sustain",  0.0f,   1.0f, 1.0f));
-    layout.add (std::make_unique<APF> ("release",  "Release",  0.001f, 4.0f, 0.001f));
+    // Envelope parameters (times in seconds, skewed so fine control is at the short end)
+    using Range = juce::NormalisableRange<float>;
+    layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.001f, 2.0f, 0.0f, 0.3f), 0.008f));
+    layout.add (std::make_unique<APF> ("decay",   "Decay",   Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
+    layout.add (std::make_unique<APF> ("sustain", "Sustain", 0.0f, 1.0f, 1.0f));
+    layout.add (std::make_unique<APF> ("release", "Release", Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
 
     return layout;
 }
@@ -49,6 +50,7 @@ void TwoOpFMAudioProcessor::prepareToPlay (double sampleRate, int)
     pitch_correction_ = 12.0f * std::log2f (kPlaitsHardwareSampleRate / (float) sampleRate);
 
     env_.reset();
+    trigger_ = plaits::TRIGGER_LOW;
 
     const double ramp = 0.02;
     ratio_smoothed_   .reset (sampleRate, ramp);
@@ -69,36 +71,6 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
-    // Process MIDI at block start (last-note priority).
-    for (const auto meta : midi)
-    {
-        const auto msg = meta.getMessage();
-        if (msg.isNoteOn())
-        {
-            sounding_note_ = msg.getNoteNumber();
-            velocity_      = msg.getVelocity() / 127.0f;
-            gate_          = true;
-            env_.noteOn();
-        }
-        else if (msg.isNoteOff())
-        {
-            if (msg.getNoteNumber() == sounding_note_)
-            {
-                gate_ = false;
-                env_.noteOff();
-                // Keep sounding_note_ set — engine needs a pitch during release.
-            }
-        }
-        else if (msg.isPitchWheel())
-        {
-            pitch_bend_semitones_ = (msg.getPitchWheelValue() - 8192) / 8192.0f * 2.0f;
-        }
-    }
-
-    // Nothing to render if gate closed and envelope fully decayed.
-    if (! gate_ && ! env_.active())
-        return;
-
     // Read ADSR params once per block (envelope itself provides smooth amplitude).
     const float atk = *apvts.getRawParameterValue ("attack");
     const float dcy = *apvts.getRawParameterValue ("decay");
@@ -112,44 +84,92 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     feedback_smoothed_.setTargetValue (*apvts.getRawParameterValue ("feedback"));
     sub_smoothed_     .setTargetValue (*apvts.getRawParameterValue ("sub"));
 
-    const int total    = buffer.getNumSamples();
-    const int numCh    = buffer.getNumChannels();
+    const int total = buffer.getNumSamples();
+    const int numCh = buffer.getNumChannels();
     float* left  = buffer.getWritePointer (0);
     float* right = numCh > 1 ? buffer.getWritePointer (1) : nullptr;
 
-    for (int offset = 0; offset < total; offset += (int) plaits::kBlockSize)
+    // Renders samples [start, end) using current voice state.
+    auto renderSegment = [&] (int start, int end)
     {
-        const int chunk = std::min ((int) plaits::kBlockSize, total - offset);
-
-        // Advance FM smoothers by exactly chunk samples.
-        float ratio_val = 0.0f, index_val = 0.0f, feedback_val = 0.0f, sub_val = 0.0f;
-        for (int i = 0; i < chunk; ++i)
+        for (int offset = start; offset < end; offset += (int) plaits::kBlockSize)
         {
-            ratio_val    = ratio_smoothed_   .getNextValue();
-            index_val    = index_smoothed_   .getNextValue();
-            feedback_val = feedback_smoothed_.getNextValue();
-            sub_val      = sub_smoothed_     .getNextValue();
+            const int chunk = std::min ((int) plaits::kBlockSize, end - offset);
+
+            // Advance FM smoothers by exactly chunk samples.
+            float ratio_val = 0.0f, index_val = 0.0f, feedback_val = 0.0f, sub_val = 0.0f;
+            for (int i = 0; i < chunk; ++i)
+            {
+                ratio_val    = ratio_smoothed_   .getNextValue();
+                index_val    = index_smoothed_   .getNextValue();
+                feedback_val = feedback_smoothed_.getNextValue();
+                sub_val      = sub_smoothed_     .getNextValue();
+            }
+
+            plaits::EngineParameters params;
+            params.note      = (float) sounding_note_ + pitch_bend_semitones_ + pitch_correction_;
+            params.harmonics = ratio_val;
+            params.timbre    = index_val;
+            params.morph     = feedback_val;
+            params.accent    = velocity_;
+            params.trigger   = trigger_;
+
+            engine_.Render (params, out_, aux_, (size_t) chunk, &already_enveloped_);
+
+            // Advance trigger state: rising edge lasts only for the first render chunk.
+            if (trigger_ == plaits::TRIGGER_RISING_EDGE)
+                trigger_ = plaits::TRIGGER_HIGH;
+
+            for (int i = 0; i < chunk; ++i)
+            {
+                const float env_amp = env_.processSample (atk, dcy, sus, rel, sr);
+                // 0.6f matches the out_gain/aux_gain Plaits applies to FMEngine in its voice.
+                const float s = (out_[i] * 0.6f + sub_val * aux_[i] * 0.6f) * env_amp * velocity_;
+                left [offset + i] = s;
+                if (right != nullptr)
+                    right[offset + i] = s;
+            }
         }
+    };
 
-        plaits::EngineParameters params;
-        params.note      = (float) sounding_note_ + pitch_bend_semitones_ + pitch_correction_;
-        params.harmonics = ratio_val;
-        params.timbre    = index_val;
-        params.morph     = feedback_val;
-        params.accent    = velocity_;
-        params.trigger   = plaits::TRIGGER_HIGH;
+    // Interleave MIDI events with rendering at their exact sample positions.
+    int cursor = 0;
+    for (const auto meta : midi)
+    {
+        const int eventPos = juce::jlimit (0, total, meta.samplePosition);
 
-        engine_.Render (params, out_, aux_, (size_t) chunk, &already_enveloped_);
+        if (eventPos > cursor && (gate_ || env_.active()))
+            renderSegment (cursor, eventPos);
+        cursor = eventPos;
 
-        for (int i = 0; i < chunk; ++i)
+        const auto msg = meta.getMessage();
+        if (msg.isNoteOn())
         {
-            const float env_amp = env_.processSample (atk, dcy, sus, rel, sr);
-            const float s = (out_[i] + sub_val * aux_[i]) * env_amp;
-            left [offset + i] = s;
-            if (right != nullptr)
-                right[offset + i] = s;
+            sounding_note_ = msg.getNoteNumber();
+            velocity_      = msg.getVelocity() / 127.0f;
+            gate_          = true;
+            trigger_       = plaits::TRIGGER_RISING_EDGE;
+            env_.noteOn();
+        }
+        else if (msg.isNoteOff())
+        {
+            if (msg.getNoteNumber() == sounding_note_)
+            {
+                gate_    = false;
+                trigger_ = plaits::TRIGGER_LOW;
+                env_.noteOff();
+                // Keep sounding_note_ set — engine needs a pitch during release.
+            }
+        }
+        else if (msg.isPitchWheel())
+        {
+            pitch_bend_semitones_ = (msg.getPitchWheelValue() - 8192) / 8192.0f * 2.0f;
         }
     }
+
+    // Render remaining samples after the last MIDI event.
+    if (cursor < total && (gate_ || env_.active()))
+        renderSegment (cursor, total);
 }
 
 //==============================================================================
