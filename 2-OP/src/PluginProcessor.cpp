@@ -112,9 +112,10 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     feedback_smoothed_.setTargetValue (*apvts.getRawParameterValue ("feedback"));
     sub_smoothed_     .setTargetValue (*apvts.getRawParameterValue ("sub"));
 
-    const int total = buffer.getNumSamples();
+    const int total    = buffer.getNumSamples();
+    const int numCh    = buffer.getNumChannels();
     float* left  = buffer.getWritePointer (0);
-    float* right = buffer.getWritePointer (1);
+    float* right = numCh > 1 ? buffer.getWritePointer (1) : nullptr;
 
     for (int offset = 0; offset < total; offset += (int) plaits::kBlockSize)
     {
@@ -145,7 +146,8 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             const float env_amp = env_.processSample (atk, dcy, sus, rel, sr);
             const float s = (out_[i] + sub_val * aux_[i]) * env_amp;
             left [offset + i] = s;
-            right[offset + i] = s;
+            if (right != nullptr)
+                right[offset + i] = s;
         }
     }
 }

@@ -1,6 +1,5 @@
 #include "PluginEditor.h"
 
-#include <cmath>
 
 //==============================================================================
 // Geometry
@@ -26,11 +25,9 @@ namespace {
     static const int kSliderTop   = kTrackTop - kThumbH / 2;       // 39
     static const int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2; // 134
 
-    // FM label / value positions
+    // FM label position
     static const int kFMLabelY    = 176;
     static const int kFMLabelH    = 14;
-    static const int kFMValueY    = 190;
-    static const int kFMValueH    = 14;
 
     // ── Section separator ──────────────────────────────────────────────────
     static const int kSeparatorY  = 210;
@@ -44,11 +41,9 @@ namespace {
     static const float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
     static const float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
 
-    // ADSR label / value positions
+    // ADSR label position
     static const int kADSRLabelY  = 270;
     static const int kADSRLabelH  = 14;
-    static const int kADSRValueY  = 284;
-    static const int kADSRValueH  = 12;
 }
 
 //==============================================================================
@@ -152,30 +147,15 @@ TwoOpFMAudioProcessorEditor::TwoOpFMAudioProcessorEditor (TwoOpFMAudioProcessor&
 {
     setSize (400, 300);
 
-    setupSlider (ratioSlider_,    ratioLabel_,    "RATIO", ratioValue_);
-    setupSlider (indexSlider_,    indexLabel_,    "INDEX", indexValue_);
-    setupSlider (feedbackSlider_, feedbackLabel_, "FDBK",  feedbackValue_);
-    setupSlider (subSlider_,      subLabel_,      "SUB",   subValue_);
+    setupSlider (ratioSlider_,    ratioLabel_,    "RATIO");
+    setupSlider (indexSlider_,    indexLabel_,    "INDEX");
+    setupSlider (feedbackSlider_, feedbackLabel_, "FDBK");
+    setupSlider (subSlider_,      subLabel_,      "SUB");
 
-    setupKnob (attackSlider_,  attackLabel_,  "ATK", attackValue_);
-    setupKnob (decaySlider_,   decayLabel_,   "DCY", decayValue_);
-    setupKnob (sustainSlider_, sustainLabel_, "SUS", sustainValue_);
-    setupKnob (releaseSlider_, releaseLabel_, "REL", releaseValue_);
-
-    auto wire = [](juce::Slider& s, juce::Label& lbl) {
-        s.onValueChange = [&s, &lbl] {
-            lbl.setText (juce::String (s.getValue(), 2), juce::dontSendNotification);
-        };
-        lbl.setText (juce::String (s.getValue(), 2), juce::dontSendNotification);
-    };
-    wire (ratioSlider_,    ratioValue_);
-    wire (indexSlider_,    indexValue_);
-    wire (feedbackSlider_, feedbackValue_);
-    wire (subSlider_,      subValue_);
-    wire (attackSlider_,   attackValue_);
-    wire (decaySlider_,    decayValue_);
-    wire (sustainSlider_,  sustainValue_);
-    wire (releaseSlider_,  releaseValue_);
+    setupKnob (attackSlider_,  attackLabel_,  "ATK");
+    setupKnob (decaySlider_,   decayLabel_,   "DCY");
+    setupKnob (sustainSlider_, sustainLabel_, "SUS");
+    setupKnob (releaseSlider_, releaseLabel_, "REL");
 }
 
 TwoOpFMAudioProcessorEditor::~TwoOpFMAudioProcessorEditor()
@@ -187,7 +167,7 @@ TwoOpFMAudioProcessorEditor::~TwoOpFMAudioProcessorEditor()
 }
 
 void TwoOpFMAudioProcessorEditor::setupSlider (juce::Slider& s, juce::Label& nameLabel,
-                                                const juce::String& name, juce::Label& valueLabel)
+                                                const juce::String& name)
 {
     s.setSliderStyle (juce::Slider::LinearVertical);
     s.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
@@ -199,15 +179,10 @@ void TwoOpFMAudioProcessorEditor::setupSlider (juce::Slider& s, juce::Label& nam
     nameLabel.setColour (juce::Label::textColourId, juce::Colour (0xff444444));
     nameLabel.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (nameLabel);
-
-    valueLabel.setFont (juce::Font (juce::FontOptions().withHeight (10.0f)));
-    valueLabel.setColour (juce::Label::textColourId, juce::Colour (0xff555555));
-    valueLabel.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (valueLabel);
 }
 
 void TwoOpFMAudioProcessorEditor::setupKnob (juce::Slider& s, juce::Label& nameLabel,
-                                              const juce::String& name, juce::Label& valueLabel)
+                                              const juce::String& name)
 {
     s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
     s.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
@@ -220,11 +195,6 @@ void TwoOpFMAudioProcessorEditor::setupKnob (juce::Slider& s, juce::Label& nameL
     nameLabel.setColour (juce::Label::textColourId, juce::Colour (0xff444444));
     nameLabel.setJustificationType (juce::Justification::centred);
     addAndMakeVisible (nameLabel);
-
-    valueLabel.setFont (juce::Font (juce::FontOptions().withHeight (10.0f)));
-    valueLabel.setColour (juce::Label::textColourId, juce::Colour (0xff555555));
-    valueLabel.setJustificationType (juce::Justification::centred);
-    addAndMakeVisible (valueLabel);
 }
 
 void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
@@ -254,11 +224,9 @@ void TwoOpFMAudioProcessorEditor::resized()
 
     juce::Slider* fmSliders[] = { &ratioSlider_, &indexSlider_, &feedbackSlider_, &subSlider_ };
     juce::Label*  fmNames[]   = { &ratioLabel_,  &indexLabel_,  &feedbackLabel_,  &subLabel_ };
-    juce::Label*  fmValues[]  = { &ratioValue_,  &indexValue_,  &feedbackValue_,  &subValue_ };
 
     juce::Slider* envKnobs[]  = { &attackSlider_, &decaySlider_, &sustainSlider_, &releaseSlider_ };
     juce::Label*  envNames[]  = { &attackLabel_,  &decayLabel_,  &sustainLabel_,  &releaseLabel_ };
-    juce::Label*  envValues[] = { &attackValue_,  &decayValue_,  &sustainValue_,  &releaseValue_ };
 
     for (int i = 0; i < 4; ++i)
     {
@@ -267,11 +235,9 @@ void TwoOpFMAudioProcessorEditor::resized()
         // FM sliders
         fmSliders[i]->setBounds (cx - kSliderW / 2, kSliderTop, kSliderW, kSliderH);
         fmNames  [i]->setBounds (cx - 25, kFMLabelY, 50, kFMLabelH);
-        fmValues [i]->setBounds (cx - 25, kFMValueY, 50, kFMValueH);
 
         // ADSR knobs
         envKnobs [i]->setBounds (cx - kKnobW / 2, kKnobCY - kKnobR - 2, kKnobW, kKnobW);
         envNames [i]->setBounds (cx - 25, kADSRLabelY, 50, kADSRLabelH);
-        envValues[i]->setBounds (cx - 25, kADSRValueY, 50, kADSRValueH);
     }
 }

@@ -55,21 +55,17 @@ private:
     // FM sliders (top section)
     juce::Slider ratioSlider_, indexSlider_, feedbackSlider_, subSlider_;
     juce::Label  ratioLabel_,  indexLabel_,  feedbackLabel_,  subLabel_;
-    juce::Label  ratioValue_,  indexValue_,  feedbackValue_,  subValue_;
 
     // ADSR knobs (bottom section)
     juce::Slider attackSlider_, decaySlider_, sustainSlider_, releaseSlider_;
     juce::Label  attackLabel_,  decayLabel_,  sustainLabel_,  releaseLabel_;
-    juce::Label  attackValue_,  decayValue_,  sustainValue_,  releaseValue_;
 
     juce::AudioProcessorValueTreeState::SliderAttachment
         ratioAttach_, indexAttach_, feedbackAttach_, subAttach_,
         attackAttach_, decayAttach_, sustainAttach_, releaseAttach_;
 
-    void setupSlider (juce::Slider& s, juce::Label& nameLabel, const juce::String& name,
-                      juce::Label& valueLabel);
-    void setupKnob   (juce::Slider& s, juce::Label& nameLabel, const juce::String& name,
-                      juce::Label& valueLabel);
+    void setupSlider (juce::Slider& s, juce::Label& nameLabel, const juce::String& name);
+    void setupKnob   (juce::Slider& s, juce::Label& nameLabel, const juce::String& name);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoOpFMAudioProcessorEditor)
 };
