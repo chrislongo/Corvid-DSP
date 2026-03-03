@@ -6,7 +6,7 @@
 | Product name | 2-OP |
 | CMake target | TwoOpFM |
 | Manufacturer | CorvidAudio |
-| Manufacturer code | CADSP |
+| Manufacturer code | CVDA |
 | Plugin code | TWOP |
 | AU type | kAudioUnitType_MusicDevice (aumu) |
 | AU export prefix | TwoOpFMAU |
