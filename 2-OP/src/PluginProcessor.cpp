@@ -24,10 +24,19 @@ TwoOpFMAudioProcessor::createParameterLayout()
 {
     using APF = juce::AudioParameterFloat;
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
-    layout.add (std::make_unique<APF> ("ratio",    "Ratio",    0.0f, 1.0f, 0.5f));
-    layout.add (std::make_unique<APF> ("index",    "Index",    0.0f, 1.0f, 0.3f));
-    layout.add (std::make_unique<APF> ("feedback", "Feedback", 0.0f, 1.0f, 0.5f));
-    layout.add (std::make_unique<APF> ("sub",      "Sub",      0.0f, 1.0f, 0.0f));
+
+    // FM parameters
+    layout.add (std::make_unique<APF> ("ratio",    "Ratio",    0.0f, 1.0f,  0.5f));
+    layout.add (std::make_unique<APF> ("index",    "Index",    0.0f, 1.0f,  0.3f));
+    layout.add (std::make_unique<APF> ("feedback", "Feedback", 0.0f, 1.0f,  0.5f));
+    layout.add (std::make_unique<APF> ("sub",      "Sub",      0.0f, 1.0f,  0.0f));
+
+    // Envelope parameters (times in seconds)
+    layout.add (std::make_unique<APF> ("attack",   "Attack",   0.001f, 2.0f, 0.008f));
+    layout.add (std::make_unique<APF> ("decay",    "Decay",    0.001f, 4.0f, 0.001f));
+    layout.add (std::make_unique<APF> ("sustain",  "Sustain",  0.0f,   1.0f, 1.0f));
+    layout.add (std::make_unique<APF> ("release",  "Release",  0.001f, 4.0f, 0.001f));
+
     return layout;
 }
 
@@ -37,9 +46,9 @@ void TwoOpFMAudioProcessor::prepareToPlay (double sampleRate, int)
     allocator_.Init (engine_buffer_, sizeof (engine_buffer_));
     engine_.Init (&allocator_);
 
-    // Pitch correction: compensate for Plaits' hardcoded 47872.34 Hz a0.
-    // Semitone offset = 12 * log2(hardware_rate / host_rate).
     pitch_correction_ = 12.0f * std::log2f (kPlaitsHardwareSampleRate / (float) sampleRate);
+
+    env_.reset();
 
     const double ramp = 0.02;
     ratio_smoothed_   .reset (sampleRate, ramp);
@@ -60,22 +69,24 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
-    // Process all MIDI events at block start (last-note priority).
+    // Process MIDI at block start (last-note priority).
     for (const auto meta : midi)
     {
         const auto msg = meta.getMessage();
         if (msg.isNoteOn())
         {
-            sounding_note_        = msg.getNoteNumber();
-            velocity_             = msg.getVelocity() / 127.0f;
-            gate_                 = true;
+            sounding_note_ = msg.getNoteNumber();
+            velocity_      = msg.getVelocity() / 127.0f;
+            gate_          = true;
+            env_.noteOn();
         }
         else if (msg.isNoteOff())
         {
             if (msg.getNoteNumber() == sounding_note_)
             {
-                gate_         = false;
-                sounding_note_ = -1;
+                gate_ = false;
+                env_.noteOff();
+                // Keep sounding_note_ set — engine needs a pitch during release.
             }
         }
         else if (msg.isPitchWheel())
@@ -84,10 +95,18 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
     }
 
-    if (! gate_)
+    // Nothing to render if gate closed and envelope fully decayed.
+    if (! gate_ && ! env_.active())
         return;
 
-    // Update smoother targets from APVTS (safe to call every block).
+    // Read ADSR params once per block (envelope itself provides smooth amplitude).
+    const float atk = *apvts.getRawParameterValue ("attack");
+    const float dcy = *apvts.getRawParameterValue ("decay");
+    const float sus = *apvts.getRawParameterValue ("sustain");
+    const float rel = *apvts.getRawParameterValue ("release");
+    const float sr  = (float) getSampleRate();
+
+    // Update FM smoother targets.
     ratio_smoothed_   .setTargetValue (*apvts.getRawParameterValue ("ratio"));
     index_smoothed_   .setTargetValue (*apvts.getRawParameterValue ("index"));
     feedback_smoothed_.setTargetValue (*apvts.getRawParameterValue ("feedback"));
@@ -101,8 +120,7 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     {
         const int chunk = std::min ((int) plaits::kBlockSize, total - offset);
 
-        // Advance all smoothers by exactly 'chunk' samples and capture the
-        // final value for this chunk.
+        // Advance FM smoothers by exactly chunk samples.
         float ratio_val = 0.0f, index_val = 0.0f, feedback_val = 0.0f, sub_val = 0.0f;
         for (int i = 0; i < chunk; ++i)
         {
@@ -113,9 +131,7 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
 
         plaits::EngineParameters params;
-        params.note      = (float) sounding_note_
-                         + pitch_bend_semitones_
-                         + pitch_correction_;
+        params.note      = (float) sounding_note_ + pitch_bend_semitones_ + pitch_correction_;
         params.harmonics = ratio_val;
         params.timbre    = index_val;
         params.morph     = feedback_val;
@@ -126,7 +142,8 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         for (int i = 0; i < chunk; ++i)
         {
-            const float s = out_[i] + sub_val * aux_[i];
+            const float env_amp = env_.processSample (atk, dcy, sus, rel, sr);
+            const float s = (out_[i] + sub_val * aux_[i]) * env_amp;
             left [offset + i] = s;
             right[offset + i] = s;
         }

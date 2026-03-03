@@ -18,6 +18,12 @@ Tasks in order. Each depends on the previous completing cleanly.
 - [x] Run CMake build — fix any compile errors
 - [x] Confirm `.component` artifact exists under `build/TwoOpFM_artefacts/`
 
+*Key fixes applied during first build:*
+- Added `TEST=1` compile definition to bypass ARM VFP assembly in `stmlib/dsp/dsp.h`
+- Added `${EURORACK}/stmlib/dsp/units.cc` to sources (pitch ratio LUTs required by linker)
+- Fixed `getSliderThumbRadius()` → returns 5 (= kThumbH/2) to prevent thumb clipping at extremes
+- Added linear ADSR (`ADSREnv`) and 4 ADSR parameters to eliminate note-on click
+
 ## 3. Install & sign
 
 - [x] Copy `.component` to `~/Library/Audio/Plug-Ins/Components/`
@@ -27,33 +33,45 @@ Tasks in order. Each depends on the previous completing cleanly.
 
 - [x] `auval -v aumu TWOP CVDA` passes with no errors
 
-## 5. DSP correctness
+## 5. UI redesign — 4 sliders + 4 knobs
+
+- [ ] Add `ADSRKnobLookAndFeel` class (rotary, matte-black, white indicator line)
+- [ ] Resize panel to 300 × 340
+- [ ] Replace 8-slider layout with 4 FM sliders (top) + 4 ADSR rotary knobs (bottom)
+- [ ] Add horizontal separator between sections
+- [ ] Build, install, sign
+- [ ] `auval -v aumu TWOP CVDA` still passes
+
+## 6. DSP correctness
 
 - [ ] Play MIDI notes across full pitch range — confirm tuning is accurate at host sample rate
 - [ ] Note on/off — no stuck notes, clean release
 - [ ] Rapid note changes — last-note priority works, no glitches
 
-## 6. Parameter sweep
+## 7. Parameter sweep
 
 - [ ] **Ratio** — audible pitch steps in modulator; snaps through quantized intervals
 - [ ] **Index** — modulation depth sweeps cleanly from sine to full FM
 - [ ] **Feedback** — 0→0.5 adds phase feedback; 0.5→1 adds self-feedback; no artifacts
 - [ ] **Sub** — audibly blends sub oscillator; at 0 = silent sub, at 1 = full blend
+- [ ] **Attack / Decay / Release** — no audible click at transitions; times feel accurate
+- [ ] **Sustain** — level holds correctly while key is held
 
-## 7. UI check
+## 8. UI check
 
 - [ ] Plugin title "2-OP" appears top-centre
-- [ ] Four sliders at correct column positions (55, 118, 182, 245)
-- [ ] Track, thumb, and tick marks match SVG mockup
-- [ ] Labels RATIO / INDEX / FDBK / SUB below sliders
-- [ ] Value display updates as slider moves
-- [ ] Background gradient correct (silver-grey, no bevels)
+- [ ] FM sliders at columns 55, 118, 182, 245 — track, thumb, and ticks match mockup v2
+- [ ] ADSR knobs at same columns, centre y=285 — indicator angle matches parameter value
+- [ ] Section separator visible between slider and knob rows
+- [ ] Labels (RATIO/INDEX/FDBK/SUB, ATK/DCY/SUS/REL) and value readouts correct
+- [ ] Value display updates live as controls move
+- [ ] Background: silver-grey gradient, flat — no bevels or shadows
 
-## 8. State persistence
+## 9. State persistence
 
-- [ ] Move sliders, close and reopen plugin — values restored
+- [ ] Move controls, close and reopen plugin — values restored
 - [ ] Standalone: quit and relaunch — values restored
 
-## 9. Create CLAUDE.md
+## 10. Create CLAUDE.md
 
-- [ ] Write `2-OP/CLAUDE.md` with build commands, plugin identity, and architecture notes
+- [ ] Write `2-OP/CLAUDE.md` with build commands, plugin identity, auval invocation, and architecture notes

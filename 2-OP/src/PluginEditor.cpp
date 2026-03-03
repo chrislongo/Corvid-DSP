@@ -1,31 +1,54 @@
 #include "PluginEditor.h"
 
+#include <cmath>
+
 //==============================================================================
-// Geometry constants (pixel-exact from SVG mockup)
+// Geometry
 //==============================================================================
 namespace {
-    // Column centres for the 4 sliders
-    static const int kColX[]  = { 55, 118, 182, 245 };
+    // 4 columns across 400 px — 100 px apart, 50 px margins each side.
+    // Centres at 50, 150, 250, 350.
+    static const int kColX[] = { 50, 150, 250, 350 };
 
-    static const int kTrackTop    = 52;
-    static const int kTrackBot    = 212;
-    static const int kTrackHeight = kTrackBot - kTrackTop;  // 160
+    // ── FM slider geometry ─────────────────────────────────────────────────
+    static const int kTrackTop    = 44;
+    static const int kTrackBot    = 168;
+    static const int kTrackHeight = kTrackBot - kTrackTop;  // 124
     static const int kTrackWidth  = 4;
 
     static const int kThumbW      = 28;
     static const int kThumbH      = 10;
+    static const int kTickCount   = 10;
 
-    static const int kTickCount   = 10;   // ticks between endpoints
+    static const int kSliderW     = 44;
+    // kSliderTop = kTrackTop - thumbRadius so that sliderPos at max equals
+    // localTrackTop, keeping the thumb fully inside the component at both extremes.
+    static const int kSliderTop   = kTrackTop - kThumbH / 2;       // 39
+    static const int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2; // 134
 
-    static const int kLabelY      = 220;
-    static const int kLabelH      = 14;
-    static const int kValueY      = 236;
-    static const int kValueH      = 14;
+    // FM label / value positions
+    static const int kFMLabelY    = 176;
+    static const int kFMLabelH    = 14;
+    static const int kFMValueY    = 190;
+    static const int kFMValueH    = 14;
 
-    // Slider component bounds (wide enough for comfortable clicking)
-    static const int kSliderW     = 40;
-    static const int kSliderTop   = 42;
-    static const int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2 + 2;
+    // ── Section separator ──────────────────────────────────────────────────
+    static const int kSeparatorY  = 210;
+
+    // ── ADSR knob geometry ─────────────────────────────────────────────────
+    static const int   kKnobR     = 16;
+    static const int   kKnobCY    = 246;  // panel-coord centre-y of knob body
+    static const int   kKnobW     = kKnobR * 2 + 4;  // component size = 36
+
+    // Rotary sweep: −135° to +135° from 12 o'clock (270° total).
+    static const float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
+    static const float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
+
+    // ADSR label / value positions
+    static const int kADSRLabelY  = 270;
+    static const int kADSRLabelH  = 14;
+    static const int kADSRValueY  = 284;
+    static const int kADSRValueH  = 12;
 }
 
 //==============================================================================
@@ -47,9 +70,6 @@ void FMSliderLookAndFeel::drawLinearSlider (juce::Graphics& g,
                                              juce::Slider::SliderStyle,
                                              juce::Slider& slider)
 {
-    // All drawing is in slider-local coordinates.
-    // The slider component spans from kSliderTop to kTrackBot (in parent space),
-    // so in local space: track top = kTrackTop - kSliderTop, track bottom = kTrackBot - kSliderTop.
     const float localTrackTop = (float) (kTrackTop - kSliderTop);
     const float localTrackBot = (float) (kTrackBot - kSliderTop);
     const float trackH        = localTrackBot - localTrackTop;
@@ -66,11 +86,9 @@ void FMSliderLookAndFeel::drawLinearSlider (juce::Graphics& g,
 
     // ── Track ────────────────────────────────────────────────────────────────
     g.setColour (juce::Colour (0xff2a2a2a));
-    g.fillRect (cx - kTrackWidth * 0.5f, localTrackTop,
-                (float) kTrackWidth, trackH);
+    g.fillRect (cx - kTrackWidth * 0.5f, localTrackTop, (float) kTrackWidth, trackH);
 
     // ── Thumb ────────────────────────────────────────────────────────────────
-    // sliderPos is the y-coordinate of the thumb centre in local slider space.
     const float thumbCy = sliderPos;
     const float thumbX  = cx - kThumbW * 0.5f;
     const float thumbY  = thumbCy - kThumbH * 0.5f;
@@ -78,9 +96,43 @@ void FMSliderLookAndFeel::drawLinearSlider (juce::Graphics& g,
     g.setColour (juce::Colour (0xff111111));
     g.fillRect (thumbX, thumbY, (float) kThumbW, (float) kThumbH);
 
-    // White hairline centred on thumb face
     g.setColour (juce::Colours::white);
     g.drawLine (thumbX, thumbCy, thumbX + kThumbW, thumbCy, 1.0f);
+}
+
+//==============================================================================
+// ADSRKnobLookAndFeel
+//==============================================================================
+
+void ADSRKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
+                                             int x, int y, int width, int height,
+                                             float sliderPos,
+                                             float rotaryStartAngle,
+                                             float rotaryEndAngle,
+                                             juce::Slider&)
+{
+    const float cx = x + width  * 0.5f;
+    const float cy = y + height * 0.5f;
+    const float r  = (float) kKnobR;
+
+    // ── Body ─────────────────────────────────────────────────────────────────
+    g.setColour (juce::Colour (0xff111111));
+    g.fillEllipse (cx - r, cy - r, r * 2.0f, r * 2.0f);
+
+    // ── Indicator line ───────────────────────────────────────────────────────
+    const float angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    const float sinA  = std::sin (angle);
+    const float cosA  = std::cos (angle);
+
+    juce::Path indicator;
+    indicator.startNewSubPath (cx + sinA * 5.0f,  cy - cosA * 5.0f);
+    indicator.lineTo           (cx + sinA * 12.0f, cy - cosA * 12.0f);
+
+    g.setColour (juce::Colours::white);
+    g.strokePath (indicator,
+                  juce::PathStrokeType (2.2f,
+                                        juce::PathStrokeType::curved,
+                                        juce::PathStrokeType::rounded));
 }
 
 //==============================================================================
@@ -89,38 +141,49 @@ void FMSliderLookAndFeel::drawLinearSlider (juce::Graphics& g,
 
 TwoOpFMAudioProcessorEditor::TwoOpFMAudioProcessorEditor (TwoOpFMAudioProcessor& p)
     : AudioProcessorEditor (&p),
-      ratioAttach_    (p.apvts, "ratio",    ratioSlider_),
-      indexAttach_    (p.apvts, "index",    indexSlider_),
-      feedbackAttach_ (p.apvts, "feedback", feedbackSlider_),
-      subAttach_      (p.apvts, "sub",      subSlider_)
+      ratioAttach_   (p.apvts, "ratio",    ratioSlider_),
+      indexAttach_   (p.apvts, "index",    indexSlider_),
+      feedbackAttach_(p.apvts, "feedback", feedbackSlider_),
+      subAttach_     (p.apvts, "sub",      subSlider_),
+      attackAttach_  (p.apvts, "attack",   attackSlider_),
+      decayAttach_   (p.apvts, "decay",    decaySlider_),
+      sustainAttach_ (p.apvts, "sustain",  sustainSlider_),
+      releaseAttach_ (p.apvts, "release",  releaseSlider_)
 {
-    setSize (300, 280);
+    setSize (400, 300);
 
-    setupSlider (ratioSlider_,    ratioLabel_,    "RATIO",    ratioValue_);
-    setupSlider (indexSlider_,    indexLabel_,    "INDEX",    indexValue_);
-    setupSlider (feedbackSlider_, feedbackLabel_, "FDBK",     feedbackValue_);
-    setupSlider (subSlider_,      subLabel_,      "SUB",      subValue_);
+    setupSlider (ratioSlider_,    ratioLabel_,    "RATIO", ratioValue_);
+    setupSlider (indexSlider_,    indexLabel_,    "INDEX", indexValue_);
+    setupSlider (feedbackSlider_, feedbackLabel_, "FDBK",  feedbackValue_);
+    setupSlider (subSlider_,      subLabel_,      "SUB",   subValue_);
 
-    // Wire value labels to sliders
+    setupKnob (attackSlider_,  attackLabel_,  "ATK", attackValue_);
+    setupKnob (decaySlider_,   decayLabel_,   "DCY", decayValue_);
+    setupKnob (sustainSlider_, sustainLabel_, "SUS", sustainValue_);
+    setupKnob (releaseSlider_, releaseLabel_, "REL", releaseValue_);
+
     auto wire = [](juce::Slider& s, juce::Label& lbl) {
         s.onValueChange = [&s, &lbl] {
             lbl.setText (juce::String (s.getValue(), 2), juce::dontSendNotification);
         };
-        // Set initial text
         lbl.setText (juce::String (s.getValue(), 2), juce::dontSendNotification);
     };
     wire (ratioSlider_,    ratioValue_);
     wire (indexSlider_,    indexValue_);
     wire (feedbackSlider_, feedbackValue_);
     wire (subSlider_,      subValue_);
+    wire (attackSlider_,   attackValue_);
+    wire (decaySlider_,    decayValue_);
+    wire (sustainSlider_,  sustainValue_);
+    wire (releaseSlider_,  releaseValue_);
 }
 
 TwoOpFMAudioProcessorEditor::~TwoOpFMAudioProcessorEditor()
 {
-    ratioSlider_   .setLookAndFeel (nullptr);
-    indexSlider_   .setLookAndFeel (nullptr);
-    feedbackSlider_.setLookAndFeel (nullptr);
-    subSlider_     .setLookAndFeel (nullptr);
+    juce::Slider* all[] = { &ratioSlider_, &indexSlider_, &feedbackSlider_, &subSlider_,
+                             &attackSlider_, &decaySlider_, &sustainSlider_, &releaseSlider_ };
+    for (auto* s : all)
+        s->setLookAndFeel (nullptr);
 }
 
 void TwoOpFMAudioProcessorEditor::setupSlider (juce::Slider& s, juce::Label& nameLabel,
@@ -143,13 +206,32 @@ void TwoOpFMAudioProcessorEditor::setupSlider (juce::Slider& s, juce::Label& nam
     addAndMakeVisible (valueLabel);
 }
 
+void TwoOpFMAudioProcessorEditor::setupKnob (juce::Slider& s, juce::Label& nameLabel,
+                                              const juce::String& name, juce::Label& valueLabel)
+{
+    s.setSliderStyle (juce::Slider::RotaryVerticalDrag);
+    s.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
+    s.setRotaryParameters (kRotaryStart, kRotaryEnd, true);
+    s.setLookAndFeel (&knobLAF_);
+    addAndMakeVisible (s);
+
+    nameLabel.setText (name, juce::dontSendNotification);
+    nameLabel.setFont (juce::Font (juce::FontOptions().withHeight (10.0f).withStyle ("Bold")));
+    nameLabel.setColour (juce::Label::textColourId, juce::Colour (0xff444444));
+    nameLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (nameLabel);
+
+    valueLabel.setFont (juce::Font (juce::FontOptions().withHeight (10.0f)));
+    valueLabel.setColour (juce::Label::textColourId, juce::Colour (0xff555555));
+    valueLabel.setJustificationType (juce::Justification::centred);
+    addAndMakeVisible (valueLabel);
+}
+
 void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Silver-grey base
     g.setColour (juce::Colour (0xffd8d8d8));
     g.fillAll();
 
-    // Subtle top-to-bottom gradient overlay
     juce::ColourGradient overlay (juce::Colour (0x18ffffff), 0.0f, 0.0f,
                                   juce::Colour (0x18000000), 0.0f, (float) getHeight(), false);
     g.setGradientFill (overlay);
@@ -159,21 +241,37 @@ void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
     g.setColour (juce::Colour (0xff222222));
     g.setFont (juce::Font (juce::FontOptions().withHeight (13.0f).withStyle ("Bold")));
     g.drawText ("2-OP", 0, 0, getWidth(), 44, juce::Justification::centred);
+
+    // FM / ADSR section separator
+    g.setColour (juce::Colour (0x40000000));
+    g.drawLine (20.0f, (float) kSeparatorY,
+                (float) (getWidth() - 20), (float) kSeparatorY, 0.75f);
 }
 
 void TwoOpFMAudioProcessorEditor::resized()
 {
-    juce::Slider* sliders[] = { &ratioSlider_, &indexSlider_, &feedbackSlider_, &subSlider_ };
-    juce::Label*  names[]  = { &ratioLabel_,  &indexLabel_,  &feedbackLabel_,  &subLabel_  };
-    juce::Label*  values[] = { &ratioValue_,  &indexValue_,  &feedbackValue_,  &subValue_  };
-
     static_assert (std::size (kColX) == 4, "");
+
+    juce::Slider* fmSliders[] = { &ratioSlider_, &indexSlider_, &feedbackSlider_, &subSlider_ };
+    juce::Label*  fmNames[]   = { &ratioLabel_,  &indexLabel_,  &feedbackLabel_,  &subLabel_ };
+    juce::Label*  fmValues[]  = { &ratioValue_,  &indexValue_,  &feedbackValue_,  &subValue_ };
+
+    juce::Slider* envKnobs[]  = { &attackSlider_, &decaySlider_, &sustainSlider_, &releaseSlider_ };
+    juce::Label*  envNames[]  = { &attackLabel_,  &decayLabel_,  &sustainLabel_,  &releaseLabel_ };
+    juce::Label*  envValues[] = { &attackValue_,  &decayValue_,  &sustainValue_,  &releaseValue_ };
 
     for (int i = 0; i < 4; ++i)
     {
         const int cx = kColX[i];
-        sliders[i]->setBounds (cx - kSliderW / 2, kSliderTop, kSliderW, kSliderH);
-        names  [i]->setBounds (cx - 24, kLabelY, 48, kLabelH);
-        values [i]->setBounds (cx - 24, kValueY, 48, kValueH);
+
+        // FM sliders
+        fmSliders[i]->setBounds (cx - kSliderW / 2, kSliderTop, kSliderW, kSliderH);
+        fmNames  [i]->setBounds (cx - 25, kFMLabelY, 50, kFMLabelH);
+        fmValues [i]->setBounds (cx - 25, kFMValueY, 50, kFMValueH);
+
+        // ADSR knobs
+        envKnobs [i]->setBounds (cx - kKnobW / 2, kKnobCY - kKnobR - 2, kKnobW, kKnobW);
+        envNames [i]->setBounds (cx - 25, kADSRLabelY, 50, kADSRLabelH);
+        envValues[i]->setBounds (cx - 25, kADSRValueY, 50, kADSRValueH);
     }
 }
