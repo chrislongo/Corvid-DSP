@@ -20,7 +20,7 @@
 - [x] Run `killall -9 AudioComponentRegistrar` to refresh AU cache
 
 ## Validation
-- [x] Run `auval -v aufx ODDH CHRS` — must pass all tests
+- [x] Run `auval -v aufx ODDH CVDA` — must pass all tests
 - [ ] Load in Logic Pro or GarageBand
 - [ ] Verify HARMONICS knob 0→100% adds progressive saturation
 - [ ] Verify no clicks or zipper noise during knob movement

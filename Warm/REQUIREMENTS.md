@@ -3,7 +3,7 @@
 ## Plugin Identity
 - **Name**: Warm
 - **Type**: AU Effect (kAudioUnitType_Effect)
-- **Manufacturer**: ChrisAudio (code: CHRS)
+- **Manufacturer**: CorvidAudio (code: CVDA)
 - **Plugin Code**: ODDH
 - **Version**: 1.0.0
 

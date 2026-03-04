@@ -30,7 +30,7 @@ codesign --force --sign "-" "$HOME/Library/Audio/Plug-Ins/Components/Warm.compon
 
 **Validate AU:**
 ```bash
-auval -v aufx ODDH CHRS
+auval -v aufx ODDH CVDA
 ```
 
 There are no automated tests. `auval` is the primary correctness check.
@@ -74,7 +74,7 @@ NormalisableRange [0,100] with setSkewForCentre(25)
 |---|---|
 | Product name | Warm |
 | CMake target | OddHarmonics |
-| Manufacturer code | CHRS |
+| Manufacturer code | CVDA |
 | Plugin code | ODDH |
 | AU type | aufx (kAudioUnitType_Effect) |
 | AU export prefix | OddHarmonicsAU |

@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 add_subdirectory(/Users/chris/src/github/JUCE juce)
 
 juce_add_plugin(OddHarmonics
-    COMPANY_NAME             "ChrisAudio"
-    PLUGIN_MANUFACTURER_CODE CHRS
+    COMPANY_NAME             "CorvidAudio"
+    PLUGIN_MANUFACTURER_CODE CVDA
     PLUGIN_CODE              ODDH
     FORMATS                  AU Standalone
     PRODUCT_NAME             "Warm"
