@@ -1,0 +1,68 @@
+<svg width="320" height="200" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel-overlay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.094"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.094"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Panel background -->
+  <rect width="320" height="200" fill="#d8d8d8"/>
+  <rect width="320" height="200" fill="url(#panel-overlay)"/>
+
+  <!-- Plugin title -->
+  <text x="160" y="22"
+    text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="13" font-weight="700" letter-spacing="0.5" fill="#222222">DIST308</text>
+
+  <!--
+    Panel: 320×200.  Group height = 72 (knob) + 4 (gap) + 15 (label) = 91px.
+    cy = (200 − 91) / 2 + 36 = 90.
+
+    Knobs: cx = 53, 160, 267 — cy = 90 — r = 36
+    Knob top = 54, knob bottom = 126, label baseline ≈ 143.
+
+    Indicator line: inner r=8, outer r=26
+    Angle convention: 0° = 12-o'clock, clockwise positive
+    Travel range: −135° (min) to +135° (max), sweep = 270°
+    angle = −135 + (defaultValue/100) × 270
+
+    DISTORTION  default 35  → −40.5°   sin=−0.6494  cos= 0.7604
+    FILTER      default  0  → −135°    sin=−0.7071  cos=−0.7071
+    VOLUME      default 75  → +67.5°   sin=+0.9239  cos= 0.3827
+
+    SVG endpoint:  x = cx + sin(a)·r,  y = cy − cos(a)·r
+  -->
+
+  <!-- DISTORTION knob (cx=53, cy=90) — default 35% → −40.5° -->
+  <circle cx="53" cy="90" r="36" fill="#111111"/>
+  <line x1="47.8" y1="83.9" x2="36.1" y2="70.2"
+        stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- FILTER knob (cx=160, cy=90) — default 0% → −135° (minimum) -->
+  <circle cx="160" cy="90" r="36" fill="#111111"/>
+  <line x1="154.3" y1="95.7" x2="141.6" y2="108.4"
+        stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- VOLUME knob (cx=267, cy=90) — default 75% → +67.5° -->
+  <circle cx="267" cy="90" r="36" fill="#111111"/>
+  <line x1="274.4" y1="86.9" x2="291.0" y2="80.1"
+        stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Labels below knobs (baseline y=143, ~17px below knob bottom at y=126) -->
+  <text x="53" y="143"
+    text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#111111">DISTORTION</text>
+  <text x="160" y="143"
+    text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#111111">FILTER</text>
+  <text x="267" y="143"
+    text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#111111">VOLUME</text>
+
+
+</svg>
