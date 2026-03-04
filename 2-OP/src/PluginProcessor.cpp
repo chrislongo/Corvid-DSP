@@ -36,7 +36,7 @@ TwoOpFMAudioProcessor::createParameterLayout()
     layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.001f, 2.0f, 0.0f, 0.3f), 0.008f));
     layout.add (std::make_unique<APF> ("decay",   "Decay",   Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
     layout.add (std::make_unique<APF> ("sustain", "Sustain", 0.0f, 1.0f, 1.0f));
-    layout.add (std::make_unique<APF> ("release", "Release", Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
+    layout.add (std::make_unique<APF> ("release", "Release", Range (0.005f, 4.0f, 0.0f, 0.3f), 0.005f));
 
     return layout;
 }
@@ -62,6 +62,9 @@ void TwoOpFMAudioProcessor::prepareToPlay (double sampleRate, int)
     index_smoothed_   .setCurrentAndTargetValue (*apvts.getRawParameterValue ("index"));
     feedback_smoothed_.setCurrentAndTargetValue (*apvts.getRawParameterValue ("feedback"));
     sub_smoothed_     .setCurrentAndTargetValue (*apvts.getRawParameterValue ("sub"));
+
+    velocity_smoothed_.reset (sampleRate, 0.005);  // 5 ms ramp
+    velocity_smoothed_.setCurrentAndTargetValue (velocity_);
 }
 
 //==============================================================================
@@ -123,8 +126,10 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             for (int i = 0; i < chunk; ++i)
             {
                 const float env_amp = env_.processSample (atk, dcy, sus, rel, sr);
+                const float vel_amp = velocity_smoothed_.getNextValue();
                 // 0.6f matches the out_gain/aux_gain Plaits applies to FMEngine in its voice.
-                const float s = (out_[i] * 0.6f + sub_val * aux_[i] * 0.6f) * env_amp * velocity_;
+                const float s = std::clamp ((out_[i] * 0.6f + sub_val * aux_[i] * 0.6f) * env_amp * vel_amp,
+                                            -1.0f, 1.0f);
                 left [offset + i] = s;
                 if (right != nullptr)
                     right[offset + i] = s;
@@ -147,6 +152,7 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         {
             sounding_note_ = msg.getNoteNumber();
             velocity_      = msg.getVelocity() / 127.0f;
+            velocity_smoothed_.setTargetValue (velocity_);
             gate_          = true;
             trigger_       = plaits::TRIGGER_RISING_EDGE;
             env_.noteOn();

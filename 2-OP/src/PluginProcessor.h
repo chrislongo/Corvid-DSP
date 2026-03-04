@@ -123,6 +123,8 @@ private:
     juce::SmoothedValue<float> index_smoothed_;
     juce::SmoothedValue<float> feedback_smoothed_;
     juce::SmoothedValue<float> sub_smoothed_;
+    // Velocity smoothing (5 ms ramp, prevents amplitude pop on retrigger)
+    juce::SmoothedValue<float> velocity_smoothed_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoOpFMAudioProcessor)
 };
