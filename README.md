@@ -32,6 +32,8 @@ A monophonic 2-operator FM synthesizer. The DSP engine is the `FMEngine` from [M
 
 ## Dist308
 
+![Dist308](docs/dist308.png)
+
 A distortion effect modelled on the ProCo Rat pedal. The signal path mirrors the original circuit: a high-gain input stage clips audio through a soft-knee limiter (modelling the anti-parallel 1N914 diodes), followed by a one-pole low-pass filter with an inverse logarithmic taper (fully open at 0%, cutting to 475 Hz at 100% — matching the Rat's backwards filter pot). The name references the LM308 op-amp in the original gain stage.
 
 **Parameters**
