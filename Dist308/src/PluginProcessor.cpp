@@ -50,8 +50,9 @@ void Dist308AudioProcessor::prepareToPlay (double sampleRate, int)
     const float f = apvts.getRawParameterValue ("filter")->load();
     const float v = apvts.getRawParameterValue ("volume")->load();
 
-    // Real RAT: feedback = 47kΩ fixed + 0–1MΩ pot, input = 1kΩ → gain = 47–1047
-    const float initGain   = 47.0f + 1000.0f * (d / 100.0f);
+    // Exponential gain curve: 1× at d=0, 1047× at d=100 (matches RAT max; avoids
+    // the hard saturation the linear 47–1047 range produced at minimum distortion).
+    const float initGain   = std::pow (1047.0f, d / 100.0f);
     const float initCutoff = 475.0f * std::pow (22000.0f / 475.0f, f / 100.0f);
     const float normV      = v / 100.0f;
     const float initOutput = normV * normV;
@@ -94,7 +95,7 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const float f = apvts.getRawParameterValue ("filter")->load();
     const float v = apvts.getRawParameterValue ("volume")->load();
 
-    const float targetInputGain  = 47.0f + 1000.0f * (d / 100.0f);
+    const float targetInputGain  = std::pow (1047.0f, d / 100.0f);
     const float targetCutoff     = 475.0f * std::pow (22000.0f / 475.0f, f / 100.0f);
     const float normVol          = v / 100.0f;
     const float targetOutputGain = normVol * normVol;
