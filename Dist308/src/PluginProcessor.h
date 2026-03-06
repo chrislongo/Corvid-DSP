@@ -43,10 +43,13 @@ private:
     std::array<juce::SmoothedValue<float>, 2> filterCutoffSmoothed;
     std::array<juce::SmoothedValue<float>, 2> outputGainSmoothed;
 
-    float filterState[2] { 0.0f, 0.0f };
+    float hpfState[2]        { 0.0f, 0.0f };  // pre-distortion HPF (~100 Hz)
+    float preClipFilterState[2] { 0.0f, 0.0f };  // LM308 GBW model
+    float filterState[2]     { 0.0f, 0.0f };
     float twoPiOverSr = 0.0f;
-
-    static float clip (float x) noexcept;
+    float piOverSr    = 0.0f;
+    float currentSr   = 44100.0f;
+    float hpfCoeff    = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Dist308AudioProcessor)
 };

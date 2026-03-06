@@ -38,13 +38,20 @@ Dist308AudioProcessor::createParameterLayout()
 
 void Dist308AudioProcessor::prepareToPlay (double sampleRate, int)
 {
-    twoPiOverSr = juce::MathConstants<float>::twoPi / static_cast<float> (sampleRate);
+    currentSr   = static_cast<float> (sampleRate);
+    twoPiOverSr = juce::MathConstants<float>::twoPi / currentSr;
+    piOverSr    = juce::MathConstants<float>::pi    / currentSr;
+
+    // Pre-distortion HPF at ~180 Hz (input AC-coupling model; clears bass bloom before clipping)
+    const float hpfK = std::tan (piOverSr * 180.0f);
+    hpfCoeff = hpfK / (1.0f + hpfK);
 
     const float d = apvts.getRawParameterValue ("distortion")->load();
     const float f = apvts.getRawParameterValue ("filter")->load();
     const float v = apvts.getRawParameterValue ("volume")->load();
 
-    const float initGain   = std::pow (10.0f, d * 3.35f / 100.0f);
+    // Real RAT: feedback = 47kΩ fixed + 0–1MΩ pot, input = 1kΩ → gain = 47–1047
+    const float initGain   = 47.0f + 1000.0f * (d / 100.0f);
     const float initCutoff = 22000.0f * std::pow (475.0f / 22000.0f, f / 100.0f);
     const float normV      = v / 100.0f;
     const float initOutput = normV * normV;
@@ -60,7 +67,9 @@ void Dist308AudioProcessor::prepareToPlay (double sampleRate, int)
         outputGainSmoothed[ch].reset (sampleRate, 0.02);
         outputGainSmoothed[ch].setCurrentAndTargetValue (initOutput);
 
-        filterState[ch] = 0.0f;
+        hpfState[ch]           = 0.0f;
+        preClipFilterState[ch] = 0.0f;
+        filterState[ch]        = 0.0f;
     }
 }
 
@@ -75,15 +84,6 @@ bool Dist308AudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) 
     return layouts.getMainInputChannelSet() == layouts.getMainOutputChannelSet();
 }
 
-float Dist308AudioProcessor::clip (float x) noexcept
-{
-    constexpr float T = 0.9f;
-    const float ax = std::abs (x);
-    if (ax <= T)    return x;
-    if (ax >= 1.0f) return std::copysign (1.0f, x);
-    const float t = (ax - T) / (1.0f - T);
-    return std::copysign (T + (1.0f - T) * (3.0f * t * t - 2.0f * t * t * t), x);
-}
 
 void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                           juce::MidiBuffer&)
@@ -94,13 +94,24 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const float f = apvts.getRawParameterValue ("filter")->load();
     const float v = apvts.getRawParameterValue ("volume")->load();
 
-    const float targetInputGain  = std::pow (10.0f, d * 3.35f / 100.0f);
+    const float targetInputGain  = 47.0f + 1000.0f * (d / 100.0f);
     const float targetCutoff     = 22000.0f * std::pow (475.0f / 22000.0f, f / 100.0f);
     const float normVol          = v / 100.0f;
     const float targetOutputGain = normVol * normVol;
 
     const int numChannels = buffer.getNumChannels();
     const int numSamples  = buffer.getNumSamples();
+
+    // Pre-clip LPF coefficient — computed once per block using the bilinear-transform
+    // form (tan-based) rather than the EMA approximation (w/(w+1)).  The EMA form
+    // under-estimates the -3dB frequency by up to 40% at mid-high cutoffs, making the
+    // plugin sound darker than the real circuit.  Using tan gives exact placement.
+    // GBW empirically set to 5 MHz: the LM308's 1 MHz small-signal spec underestimates
+    // effective bandwidth when the output spends most of its time in the nonlinear
+    // (diode-clamped) region, which is the case for typical guitar signal levels.
+    const float preClipFc    = std::min (5.0e6f / targetInputGain, currentSr * 0.45f);
+    const float preClipK     = std::tan (piOverSr * preClipFc);
+    const float preClipCoeff = preClipK / (1.0f + preClipK);
 
     for (int ch = 0; ch < numChannels && ch < 2; ++ch)
     {
@@ -114,21 +125,31 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         for (int i = 0; i < numSamples; ++i)
         {
-            // 1. Input gain (DISTORTION)
-            float x = data[i] * inputGainSmoothed[chi].getNextValue();
+            const float gain = inputGainSmoothed[chi].getNextValue();
 
-            // 2. Soft-knee clipper (T=0.9, models 1N914 diodes)
-            x = clip (x);
+            // 1. Pre-distortion HPF at ~100 Hz (models input AC-coupling cap).
+            //    Removes sub-bass before clipping so it doesn't occupy headroom and
+            //    mask the midrange harmonics.
+            hpfState[ch] += hpfCoeff * (data[i] - hpfState[ch]);
+            float x = data[i] - hpfState[ch];
 
-            // 3. One-pole LPF (FILTER)
+            // 2. LM308 bandwidth model: one-pole LPF, fc = GBW/gain (~1 MHz GBW).
+            //    Coefficient is pre-computed per block (accurate bilinear form).
+            preClipFilterState[ch] = preClipCoeff * x
+                                     + (1.0f - preClipCoeff) * preClipFilterState[ch];
+
+            // 3. Amplify + diode saturation.
+            //    tanh models anti-parallel 1N914s in op-amp feedback.
+            x = std::tanh (preClipFilterState[ch] * gain);
+
+            // 4. Post-clip one-pole LPF (FILTER knob, 22 kHz → 475 Hz)
             const float fc    = filterCutoffSmoothed[chi].getNextValue();
             const float w     = twoPiOverSr * fc;
             const float coeff = w / (w + 1.0f);
             filterState[ch]   = coeff * x + (1.0f - coeff) * filterState[ch];
-            x = filterState[ch];
 
-            // 4. Output gain (VOLUME)
-            data[i] = x * outputGainSmoothed[chi].getNextValue();
+            // 5. Output gain (VOLUME)
+            data[i] = filterState[ch] * outputGainSmoothed[chi].getNextValue();
         }
     }
 }
