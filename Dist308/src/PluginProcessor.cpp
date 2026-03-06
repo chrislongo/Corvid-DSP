@@ -24,7 +24,7 @@ Dist308AudioProcessor::createParameterLayout()
 
     layout.add (std::make_unique<juce::AudioParameterFloat> (
         juce::ParameterID { "filter", 1 }, "Filter",
-        juce::NormalisableRange<float> (0.0f, 100.0f, 0.01f), 0.0f,
+        juce::NormalisableRange<float> (0.0f, 100.0f, 0.01f), 50.0f,
         juce::AudioParameterFloatAttributes().withLabel (" %")));
 
     juce::NormalisableRange<float> volRange (0.0f, 100.0f, 0.01f);
@@ -52,7 +52,7 @@ void Dist308AudioProcessor::prepareToPlay (double sampleRate, int)
 
     // Real RAT: feedback = 47kΩ fixed + 0–1MΩ pot, input = 1kΩ → gain = 47–1047
     const float initGain   = 47.0f + 1000.0f * (d / 100.0f);
-    const float initCutoff = 22000.0f * std::pow (475.0f / 22000.0f, f / 100.0f);
+    const float initCutoff = 475.0f * std::pow (22000.0f / 475.0f, f / 100.0f);
     const float normV      = v / 100.0f;
     const float initOutput = normV * normV;
 
@@ -95,7 +95,7 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const float v = apvts.getRawParameterValue ("volume")->load();
 
     const float targetInputGain  = 47.0f + 1000.0f * (d / 100.0f);
-    const float targetCutoff     = 22000.0f * std::pow (475.0f / 22000.0f, f / 100.0f);
+    const float targetCutoff     = 475.0f * std::pow (22000.0f / 475.0f, f / 100.0f);
     const float normVol          = v / 100.0f;
     const float targetOutputGain = normVol * normVol;
 
@@ -142,7 +142,7 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             //    tanh models anti-parallel 1N914s in op-amp feedback.
             x = std::tanh (preClipFilterState[ch] * gain);
 
-            // 4. Post-clip one-pole LPF (FILTER knob, 22 kHz → 475 Hz)
+            // 4. Post-clip one-pole LPF (FILTER knob, 475 Hz → 22 kHz)
             const float fc    = filterCutoffSmoothed[chi].getNextValue();
             const float w     = twoPiOverSr * fc;
             const float coeff = w / (w + 1.0f);
