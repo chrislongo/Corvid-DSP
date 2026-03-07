@@ -42,12 +42,12 @@ Standard JUCE 4-file plugin split:
 
 **Signal chain:**
 ```
-Input → [Input gain (DISTORTION)] → [Soft-knee clipper T=0.9] → [One-pole LPF (FILTER)] → [Output gain (VOLUME)] → Output
+Input → [HPF ~180 Hz] → [Pre-clip LPF (LM308 GBW model)] → [Gain + tanh saturation (DISTORTION)] → [One-pole LPF (FILTER)] → [Output gain (VOLUME)] → Output
 ```
 
 **Parameters:**
-- `distortion` [0–100, skew centre 20, default 35] → input gain `pow(10, d*3.35/100)`
-- `filter`     [0–100, linear, default 0]          → cutoff `22000 * pow(475/22000, f/100)`
+- `distortion` [0–100, skew centre 20, default 35] → gain `pow(1047, d/100)`; pre-clip LPF fc = `5e6 / gain`
+- `filter`     [0–100, linear, default 50]         → cutoff `475 * pow(22000/475, f/100)` (475 Hz at 0%, 22 kHz at 100%)
 - `volume`     [0–100, skew centre 35, default 75]  → output gain `(v/100)²`
 
 **SmoothedValue** — one per channel per parameter (3×2 = 6 instances), targets set per block, advanced per sample.

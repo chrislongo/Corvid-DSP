@@ -5,3 +5,4 @@
 
 # Build artifacts (project-specific gitignores cover their own)
 build/
+.vscode/

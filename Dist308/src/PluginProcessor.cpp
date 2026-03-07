@@ -103,17 +103,6 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const int numChannels = buffer.getNumChannels();
     const int numSamples  = buffer.getNumSamples();
 
-    // Pre-clip LPF coefficient — computed once per block using the bilinear-transform
-    // form (tan-based) rather than the EMA approximation (w/(w+1)).  The EMA form
-    // under-estimates the -3dB frequency by up to 40% at mid-high cutoffs, making the
-    // plugin sound darker than the real circuit.  Using tan gives exact placement.
-    // GBW empirically set to 5 MHz: the LM308's 1 MHz small-signal spec underestimates
-    // effective bandwidth when the output spends most of its time in the nonlinear
-    // (diode-clamped) region, which is the case for typical guitar signal levels.
-    const float preClipFc    = std::min (5.0e6f / targetInputGain, currentSr * 0.45f);
-    const float preClipK     = std::tan (piOverSr * preClipFc);
-    const float preClipCoeff = preClipK / (1.0f + preClipK);
-
     for (int ch = 0; ch < numChannels && ch < 2; ++ch)
     {
         const auto chi = static_cast<size_t> (ch);
@@ -128,29 +117,36 @@ void Dist308AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         {
             const float gain = inputGainSmoothed[chi].getNextValue();
 
-            // 1. Pre-distortion HPF at ~100 Hz (models input AC-coupling cap).
+            // 1. Pre-distortion HPF at ~180 Hz (models input AC-coupling cap).
             //    Removes sub-bass before clipping so it doesn't occupy headroom and
             //    mask the midrange harmonics.
-            hpfState[ch] += hpfCoeff * (data[i] - hpfState[ch]);
-            float x = data[i] - hpfState[ch];
+            hpfState[chi] += hpfCoeff * (data[i] - hpfState[chi]);
+            float x = data[i] - hpfState[chi];
 
-            // 2. LM308 bandwidth model: one-pole LPF, fc = GBW/gain (~1 MHz GBW).
-            //    Coefficient is pre-computed per block (accurate bilinear form).
-            preClipFilterState[ch] = preClipCoeff * x
-                                     + (1.0f - preClipCoeff) * preClipFilterState[ch];
+            // 2. LM308 bandwidth model: one-pole LPF, fc = GBW/gain.
+            //    Coefficient uses the bilinear-transform (tan-based) form for exact
+            //    -3 dB placement.  Computed per-sample so it tracks the smoothed gain.
+            //    GBW empirically set to 5 MHz: the LM308's 1 MHz small-signal spec
+            //    underestimates effective bandwidth in the nonlinear (diode-clamped)
+            //    regime typical of guitar signal levels.
+            const float preClipFc    = std::min (5.0e6f / gain, currentSr * 0.45f);
+            const float preClipK     = std::tan (piOverSr * preClipFc);
+            const float preClipCoeff = preClipK / (1.0f + preClipK);
+            preClipFilterState[chi]  = preClipCoeff * x
+                                       + (1.0f - preClipCoeff) * preClipFilterState[chi];
 
             // 3. Amplify + diode saturation.
             //    tanh models anti-parallel 1N914s in op-amp feedback.
-            x = std::tanh (preClipFilterState[ch] * gain);
+            x = std::tanh (preClipFilterState[chi] * gain);
 
             // 4. Post-clip one-pole LPF (FILTER knob, 475 Hz → 22 kHz)
             const float fc    = filterCutoffSmoothed[chi].getNextValue();
             const float w     = twoPiOverSr * fc;
             const float coeff = w / (w + 1.0f);
-            filterState[ch]   = coeff * x + (1.0f - coeff) * filterState[ch];
+            filterState[chi]  = coeff * x + (1.0f - coeff) * filterState[chi];
 
             // 5. Output gain (VOLUME)
-            data[i] = filterState[ch] * outputGainSmoothed[chi].getNextValue();
+            data[i] = filterState[chi] * outputGainSmoothed[chi].getNextValue();
         }
     }
 }
