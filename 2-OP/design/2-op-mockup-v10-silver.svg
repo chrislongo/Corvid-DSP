@@ -1,0 +1,197 @@
+<svg width="545" height="455" viewBox="0 0 545 455" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    v10-silver: Section-box layout from dx7-valhalla adapted to 2-OP silver/grey palette.
+
+    Panel:    545×455
+    FM box:   y=60–288 (height=228)
+    ADSR box: y=296–445 (height=149; knobs vertically centred)
+    Sliders cx: 83, 209, 336, 463   track y=95–255 (height=160, 8 ticks)
+    Label baseline: y=271   Internal separator: y=281
+    Knobs  cx:  83, 178, 273, 368, 463   cy=373
+    Knob labels: y=408
+  -->
+  <defs>
+    <linearGradient id="panel-overlay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.094"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.094"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Panel ─────────────────────────────────────────────────────────── -->
+  <rect width="545" height="455" fill="#d8d8d8"/>
+  <rect width="545" height="455" fill="url(#panel-overlay)"/>
+
+  <!-- ── Title strip ────────────────────────────────────────────────────── -->
+  <line x1="0" y1="54" x2="545" y2="54" stroke="#aaaaaa" stroke-width="0.75"/>
+
+  <text x="22" y="39"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="30" font-weight="700" letter-spacing="-1" fill="#111111">2-OP</text>
+
+  <text x="522" y="24" text-anchor="end"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="7.5" font-weight="700" letter-spacing="2.8" fill="#666666">FM SYNTHESIZER</text>
+  <text x="522" y="38" text-anchor="end"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="7.5" letter-spacing="1" fill="#999999">OPERATOR MODEL: 2-OP / FEEDBACK</text>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- FM OPERATORS BOX                                                     -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="14" y="60" width="517" height="228" rx="8"
+    fill="#d0d0d0" stroke="#888888" stroke-width="1.5"/>
+
+  <text x="28" y="78"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="8" font-weight="700" letter-spacing="3" fill="#555555">FM OPERATORS</text>
+
+  <!-- ── RATIO (cx=83) ─────────────────────────────────────────────────── -->
+  <rect x="80.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+  <!-- 8 ticks; spacing = 160/9 ≈ 17.78; first tick at y=95+17.78=112.8 -->
+  <g stroke="#888888" stroke-width="1">
+    <line x1="70"  x2="78.5" y1="112.8" y2="112.8"/> <line x1="87.5" x2="96"  y1="112.8" y2="112.8"/>
+    <line x1="70"  x2="78.5" y1="130.5" y2="130.5"/> <line x1="87.5" x2="96"  y1="130.5" y2="130.5"/>
+    <line x1="70"  x2="78.5" y1="148.3" y2="148.3"/> <line x1="87.5" x2="96"  y1="148.3" y2="148.3"/>
+    <line x1="70"  x2="78.5" y1="166.1" y2="166.1"/> <line x1="87.5" x2="96"  y1="166.1" y2="166.1"/>
+    <line x1="70"  x2="78.5" y1="183.9" y2="183.9"/> <line x1="87.5" x2="96"  y1="183.9" y2="183.9"/>
+    <line x1="70"  x2="78.5" y1="201.6" y2="201.6"/> <line x1="87.5" x2="96"  y1="201.6" y2="201.6"/>
+    <line x1="70"  x2="78.5" y1="219.4" y2="219.4"/> <line x1="87.5" x2="96"  y1="219.4" y2="219.4"/>
+    <line x1="70"  x2="78.5" y1="237.2" y2="237.2"/> <line x1="87.5" x2="96"  y1="237.2" y2="237.2"/>
+  </g>
+  <!-- Thumb at 50% → yc=175 -->
+  <rect x="62" y="168.5" width="42" height="13" fill="#111111"/>
+  <line x1="62" y1="175" x2="104" y2="175" stroke="#ffffff" stroke-width="1"/>
+  <text x="83" y="271" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Ratio</text>
+
+  <!-- ── INDEX (cx=209) ────────────────────────────────────────────────── -->
+  <rect x="206.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+  <g stroke="#888888" stroke-width="1">
+    <line x1="196" x2="204.5" y1="112.8" y2="112.8"/> <line x1="213.5" x2="222" y1="112.8" y2="112.8"/>
+    <line x1="196" x2="204.5" y1="130.5" y2="130.5"/> <line x1="213.5" x2="222" y1="130.5" y2="130.5"/>
+    <line x1="196" x2="204.5" y1="148.3" y2="148.3"/> <line x1="213.5" x2="222" y1="148.3" y2="148.3"/>
+    <line x1="196" x2="204.5" y1="166.1" y2="166.1"/> <line x1="213.5" x2="222" y1="166.1" y2="166.1"/>
+    <line x1="196" x2="204.5" y1="183.9" y2="183.9"/> <line x1="213.5" x2="222" y1="183.9" y2="183.9"/>
+    <line x1="196" x2="204.5" y1="201.6" y2="201.6"/> <line x1="213.5" x2="222" y1="201.6" y2="201.6"/>
+    <line x1="196" x2="204.5" y1="219.4" y2="219.4"/> <line x1="213.5" x2="222" y1="219.4" y2="219.4"/>
+    <line x1="196" x2="204.5" y1="237.2" y2="237.2"/> <line x1="213.5" x2="222" y1="237.2" y2="237.2"/>
+  </g>
+  <!-- Thumb at 30% → yc=207 -->
+  <rect x="188" y="200.5" width="42" height="13" fill="#111111"/>
+  <line x1="188" y1="207" x2="230" y2="207" stroke="#ffffff" stroke-width="1"/>
+  <text x="209" y="271" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Index</text>
+
+  <!-- ── FEEDBACK (cx=336) ─────────────────────────────────────────────── -->
+  <rect x="333.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+  <g stroke="#888888" stroke-width="1">
+    <line x1="323" x2="331.5" y1="112.8" y2="112.8"/> <line x1="340.5" x2="349" y1="112.8" y2="112.8"/>
+    <line x1="323" x2="331.5" y1="130.5" y2="130.5"/> <line x1="340.5" x2="349" y1="130.5" y2="130.5"/>
+    <line x1="323" x2="331.5" y1="148.3" y2="148.3"/> <line x1="340.5" x2="349" y1="148.3" y2="148.3"/>
+    <line x1="323" x2="331.5" y1="166.1" y2="166.1"/> <line x1="340.5" x2="349" y1="166.1" y2="166.1"/>
+    <line x1="323" x2="331.5" y1="183.9" y2="183.9"/> <line x1="340.5" x2="349" y1="183.9" y2="183.9"/>
+    <line x1="323" x2="331.5" y1="201.6" y2="201.6"/> <line x1="340.5" x2="349" y1="201.6" y2="201.6"/>
+    <line x1="323" x2="331.5" y1="219.4" y2="219.4"/> <line x1="340.5" x2="349" y1="219.4" y2="219.4"/>
+    <line x1="323" x2="331.5" y1="237.2" y2="237.2"/> <line x1="340.5" x2="349" y1="237.2" y2="237.2"/>
+  </g>
+  <!-- Thumb at 50% → yc=175 -->
+  <rect x="315" y="168.5" width="42" height="13" fill="#111111"/>
+  <line x1="315" y1="175" x2="357" y2="175" stroke="#ffffff" stroke-width="1"/>
+  <text x="336" y="271" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Feedback</text>
+
+  <!-- ── SUB (cx=463) — above Output ──────────────────────────────────── -->
+  <rect x="460.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+  <g stroke="#888888" stroke-width="1">
+    <line x1="450" x2="458.5" y1="112.8" y2="112.8"/> <line x1="467.5" x2="476" y1="112.8" y2="112.8"/>
+    <line x1="450" x2="458.5" y1="130.5" y2="130.5"/> <line x1="467.5" x2="476" y1="130.5" y2="130.5"/>
+    <line x1="450" x2="458.5" y1="148.3" y2="148.3"/> <line x1="467.5" x2="476" y1="148.3" y2="148.3"/>
+    <line x1="450" x2="458.5" y1="166.1" y2="166.1"/> <line x1="467.5" x2="476" y1="166.1" y2="166.1"/>
+    <line x1="450" x2="458.5" y1="183.9" y2="183.9"/> <line x1="467.5" x2="476" y1="183.9" y2="183.9"/>
+    <line x1="450" x2="458.5" y1="201.6" y2="201.6"/> <line x1="467.5" x2="476" y1="201.6" y2="201.6"/>
+    <line x1="450" x2="458.5" y1="219.4" y2="219.4"/> <line x1="467.5" x2="476" y1="219.4" y2="219.4"/>
+    <line x1="450" x2="458.5" y1="237.2" y2="237.2"/> <line x1="467.5" x2="476" y1="237.2" y2="237.2"/>
+  </g>
+  <!-- Thumb at 0% → yc=255 (bottom) -->
+  <rect x="442" y="248.5" width="42" height="13" fill="#111111"/>
+  <line x1="442" y1="255" x2="484" y2="255" stroke="#ffffff" stroke-width="1"/>
+  <text x="463" y="271" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Sub</text>
+
+  <!-- Separator hairline inside FM box (below labels) -->
+  <line x1="28" y1="281" x2="517" y2="281" stroke="#aaaaaa" stroke-width="0.5"/>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- ENVELOPE + OUTPUT BOX                                                -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <rect x="14" y="296" width="517" height="149" rx="8"
+    fill="#d0d0d0" stroke="#888888" stroke-width="1.5"/>
+
+  <text x="28" y="313"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="8" font-weight="700" letter-spacing="3" fill="#555555">ENVELOPE + OUTPUT</text>
+
+  <!--
+    Knob cy=373 (vertically centred in box interior y=321–443, 122px).
+    Content block: 40px knob + 5px gap + 14px label = 59px total.
+    Centre at (321+443)/2=382; cy+8.5=382 → cy=373.
+
+    Indicator directions (JUCE rotary sweep 1.25π–2.75π, total 1.5π):
+      Attack/Decay/Release ≈ min → ~225° from 12-o'clock
+        dir=(sin225°,−cos225°)=(−0.707,+0.707)
+        inner=(cx−5.3,cy+5.3)  outer=(cx−12.7,cy+12.7)
+      Sustain = 1.0 → 495°=135° from 12-o'clock
+        dir=(sin135°,−cos135°)=(+0.707,+0.707)
+        inner=(cx+5.3,cy+5.3)  outer=(cx+12.7,cy+12.7)
+      Output = 70% → 1.25π+0.7×1.5π=2.30π → 54° from 12-o'clock
+        dir=(sin54°,−cos54°)=(+0.809,−0.588)
+        inner=(cx+6.1,cy−4.4)  outer=(cx+14.6,cy−10.6)
+  -->
+
+  <!-- Attack (cx=83, cy=373) -->
+  <circle cx="83" cy="373" r="20" fill="#111111"/>
+  <line x1="77.7" y1="378.3" x2="70.3" y2="385.7"
+    stroke="#ffffff" stroke-width="3.3" stroke-linecap="round"/>
+  <text x="83" y="408" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Attack</text>
+
+  <!-- Decay (cx=178, cy=373) -->
+  <circle cx="178" cy="373" r="20" fill="#111111"/>
+  <line x1="172.7" y1="378.3" x2="165.3" y2="385.7"
+    stroke="#ffffff" stroke-width="3.3" stroke-linecap="round"/>
+  <text x="178" y="408" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Decay</text>
+
+  <!-- Sustain (cx=273, cy=373) — at max -->
+  <circle cx="273" cy="373" r="20" fill="#111111"/>
+  <line x1="278.3" y1="378.3" x2="285.7" y2="385.7"
+    stroke="#ffffff" stroke-width="3.3" stroke-linecap="round"/>
+  <text x="273" y="408" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Sustain</text>
+
+  <!-- Release (cx=368, cy=373) -->
+  <circle cx="368" cy="373" r="20" fill="#111111"/>
+  <line x1="362.7" y1="378.3" x2="355.3" y2="385.7"
+    stroke="#ffffff" stroke-width="3.3" stroke-linecap="round"/>
+  <text x="368" y="408" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Release</text>
+
+  <!-- Output (cx=463, cy=373) — 70% (−12 dB default) -->
+  <circle cx="463" cy="373" r="20" fill="#111111"/>
+  <line x1="469.1" y1="368.6" x2="477.6" y2="362.4"
+    stroke="#ffffff" stroke-width="3.3" stroke-linecap="round"/>
+  <text x="463" y="408" text-anchor="middle"
+    font-family="-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif"
+    font-size="10" font-weight="700" letter-spacing="0.3" fill="#444444">Output</text>
+
+</svg>

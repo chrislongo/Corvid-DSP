@@ -13,38 +13,35 @@ namespace {
     constexpr int kKnobColX[] = { 83, 178, 273, 368, 463 };
 
     // ── FM slider geometry ─────────────────────────────────────────────────
-    constexpr int kTrackTop    = 30;
-    constexpr int kTrackBot    = 270;
-    constexpr int kTrackHeight = kTrackBot - kTrackTop;   // 240
-    constexpr int kTrackWidth  = 6;
+    constexpr int kTrackTop    = 95;
+    constexpr int kTrackBot    = 255;
+    constexpr int kTrackHeight = kTrackBot - kTrackTop;   // 160
+    constexpr int kTrackWidth  = 5;
 
     constexpr int kThumbW      = 42;
-    constexpr int kThumbH      = 15;
+    constexpr int kThumbH      = 13;
     constexpr int kTickCount   = 10;
 
     constexpr int kSliderW     = 44;
-    constexpr int kSliderTop   = kTrackTop - kThumbH / 2;            // 23
-    constexpr int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2; // 254
+    constexpr int kSliderTop   = kTrackTop - kThumbH / 2;            // 89
+    constexpr int kSliderH     = kTrackBot - kSliderTop + kThumbH / 2; // 172
 
     // FM label
-    constexpr int kFMLabelY    = 292;
+    constexpr int kFMLabelY    = 271;
     constexpr int kFMLabelH    = 14;
     constexpr int kFMLabelW    = 80;
 
-    // ── Section separator ──────────────────────────────────────────────────
-    constexpr int kSeparatorY  = 314;
-
     // ── Knob geometry ──────────────────────────────────────────────────────
-    constexpr int   kKnobR     = 24;
-    constexpr int   kKnobCY    = 359;
-    constexpr int   kKnobW     = kKnobR * 2 + 4;   // 52
+    constexpr int   kKnobR     = 20;
+    constexpr int   kKnobCY    = 373;
+    constexpr int   kKnobW     = kKnobR * 2 + 4;   // 44
 
     // Rotary sweep: −135° to +135° from 12 o'clock (270° total).
     constexpr float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
     constexpr float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
 
     // Knob label
-    constexpr int kKnobLabelY  = 396;
+    constexpr int kKnobLabelY  = 408;
     constexpr int kKnobLabelH  = 14;
     constexpr int kKnobLabelW  = 80;
 }
@@ -73,11 +70,11 @@ void FMSliderLookAndFeel::drawLinearSlider (juce::Graphics& g,
     const float trackH        = localTrackBot - localTrackTop;
     const float cx            = slider.getWidth() * 0.5f;
 
-    // ── Tick marks ───────────────────────────────────────────────────────────
+    // ── Tick marks (skip top and bottom endpoints) ───────────────────────────
     g.setColour (juce::Colour (0xff888888));
-    for (int i = 1; i <= kTickCount; ++i)
+    for (int i = 1; i < kTickCount - 1; ++i)
     {
-        const float ty = localTrackTop + (float) i * (trackH / (kTickCount + 1));
+        const float ty = localTrackTop + (float) i * (trackH / (float) (kTickCount - 1));
         g.drawLine (cx - 14.0f, ty, cx - 4.5f, ty, 1.0f);
         g.drawLine (cx + 4.5f, ty, cx + 14.0f, ty, 1.0f);
     }
@@ -149,7 +146,7 @@ TwoOpFMAudioProcessorEditor::TwoOpFMAudioProcessorEditor (TwoOpFMAudioProcessor&
       releaseAttach_ (p.apvts, "release",  releaseSlider_),
       outputAttach_  (p.apvts, "output",   outputSlider_)
 {
-    setSize (545, 420);
+    setSize (545, 455);
 
     setupSlider (ratioSlider_,    ratioLabel_,    "Ratio");
     setupSlider (indexSlider_,    indexLabel_,    "Index");
@@ -205,6 +202,7 @@ void TwoOpFMAudioProcessorEditor::setupKnob (juce::Slider& s, juce::Label& nameL
 
 void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
 {
+    // ── Panel background ─────────────────────────────────────────────────────
     g.setColour (juce::Colour (0xffd8d8d8));
     g.fillAll();
 
@@ -213,10 +211,40 @@ void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
     g.setGradientFill (overlay);
     g.fillAll();
 
-    // FM / ADSR section separator
-    g.setColour (juce::Colour (0x40000000));
-    g.drawLine (20.0f, (float) kSeparatorY,
-                (float) (getWidth() - 20), (float) kSeparatorY, 0.75f);
+    // ── Title strip ──────────────────────────────────────────────────────────
+    g.setColour (juce::Colour (0xff111111));
+    g.setFont (juce::Font (juce::FontOptions().withHeight (30.0f).withStyle ("Bold")));
+    g.drawText ("2-OP", 22, 9, 150, 37, juce::Justification::bottomLeft);
+
+    g.setColour (juce::Colour (0xff666666));
+    g.setFont (juce::Font (juce::FontOptions().withHeight (7.5f).withStyle ("Bold")));
+    g.drawText ("FM SYNTHESIZER", 0, 14, getWidth() - 23, 14, juce::Justification::bottomRight);
+
+    g.setColour (juce::Colour (0xff999999));
+    g.setFont (juce::Font (juce::FontOptions().withHeight (7.5f)));
+    g.drawText ("OPERATOR MODEL: 2-OP / FEEDBACK", 0, 28, getWidth() - 23, 14, juce::Justification::bottomRight);
+
+    // ── FM OPERATORS section box ─────────────────────────────────────────────
+    const juce::Rectangle<float> fmBox (14.0f, 60.0f, 517.0f, 228.0f);
+    g.setColour (juce::Colour (0xffd0d0d0));
+    g.fillRoundedRectangle (fmBox, 8.0f);
+    g.setColour (juce::Colour (0xff888888));
+    g.drawRoundedRectangle (fmBox, 8.0f, 1.5f);
+
+    g.setColour (juce::Colour (0xff555555));
+    g.setFont (juce::Font (juce::FontOptions().withHeight (8.0f).withStyle ("Bold")));
+    g.drawText ("FM CONTROLS", 28, 68, 200, 14, juce::Justification::bottomLeft);
+
+    // ── ENVELOPE + OUTPUT section box ────────────────────────────────────────
+    const juce::Rectangle<float> envBox (14.0f, 296.0f, 517.0f, 149.0f);
+    g.setColour (juce::Colour (0xffd0d0d0));
+    g.fillRoundedRectangle (envBox, 8.0f);
+    g.setColour (juce::Colour (0xff888888));
+    g.drawRoundedRectangle (envBox, 8.0f, 1.5f);
+
+    g.setColour (juce::Colour (0xff555555));
+    g.setFont (juce::Font (juce::FontOptions().withHeight (8.0f).withStyle ("Bold")));
+    g.drawText ("ENVELOPE + OUTPUT", 28, 303, 250, 14, juce::Justification::bottomLeft);
 }
 
 void TwoOpFMAudioProcessorEditor::resized()
