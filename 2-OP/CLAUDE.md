@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |---|---|
 | Product name | 2-OP |
 | AU type | `aumu` (instrument) |
-| Manufacturer code | CVDA |
-| Plugin code | TWOP |
+| Manufacturer code | Cvda |
+| Plugin code | Twop |
 | Bundle ID | `com.CorvidAudio.TwoOpFM` |
 | CMake target | `TwoOpFM` |
 
@@ -33,7 +33,7 @@ Run from inside `2-OP/`:
 rm -rf /Users/chris/Library/Audio/Plug-Ins/Components/2-OP.component
 cp -R build/TwoOpFM_artefacts/Release/AU/2-OP.component /Users/chris/Library/Audio/Plug-Ins/Components/
 codesign --force --sign "-" /Users/chris/Library/Audio/Plug-Ins/Components/2-OP.component
-auval -v aumu TWOP CVDA
+auval -v aumu Twop Cvda
 ```
 
 ## Architecture
@@ -52,11 +52,11 @@ The processor wraps Plaits' `FMEngine` — a 2-operator phase-modulation synth f
 
 ### ADSR envelope (`ADSREnv` in `PluginProcessor.h`)
 
-A custom linear ADSR applied per-sample after the engine renders each chunk. `noteOn()` ramps from current level (no click on retrigger). Release captures the current level as `releaseStart` for a linear ramp to zero. The engine keeps rendering during release so the pitch is maintained.
+A custom ADSR applied per-sample after the engine renders each chunk. `noteOn()` does not reset `level`, so retrigger ramps smoothly from the current value. Release captures `level` as `releaseStart` for a linear ramp to zero. The engine keeps rendering during release so pitch is maintained.
 
-Decay case has an early-out for `s >= 1.0` — without it, a zero-length step at full sustain would cause an infinite loop in the state machine.
+**Attack** uses an exponential approach (`level = 1 − (1 − level) × exp(−1/(a·sr))`) to prevent onset clicks. Attack minimum is 5 ms; default 10 ms. Decay and release are linear steps. Decay has an early-out for `s >= 1.0` to prevent a zero-step infinite loop.
 
-Envelope time parameters (attack/decay/release) use a skewed `NormalisableRange` (skew = 0.3) so knob travel is concentrated at short values where most musically useful times live.
+Envelope time parameters use a skewed `NormalisableRange` (skew = 0.3) so knob travel is concentrated at short values where most musically useful times live.
 
 ### MIDI handling
 

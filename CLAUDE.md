@@ -9,6 +9,7 @@ This is a multi-project DSP plugin workspace. Each plugin lives in its own subdi
 | Dir | Plugin | Type |
 |-----|--------|------|
 | `Warm/` | Odd-harmonic tanh waveshaper | AU Effect |
+| `Dist308/` | ProCo Rat-inspired distortion | AU Effect |
 | `2-OP/` | 2-operator FM synthesizer | AU Instrument |
 
 Read the project-specific `CLAUDE.md` before working inside a project folder.
@@ -18,7 +19,7 @@ Read the project-specific `CLAUDE.md` before working inside a project folder.
 - **cmake**: `/opt/homebrew/bin/cmake` — Xcode is **not** installed; always use `-G Ninja`
 - **Compiler**: `xcrun -f clang` / `xcrun -f clang++` (Apple Clang via Xcode CLI tools)
 - **JUCE**: `/Users/chris/src/github/JUCE` (added via `add_subdirectory` in each project)
-- **eurorack/stmlib**: `/Users/chris/src/github/eurorack` (used by 2-OP)
+- **eurorack/stmlib**: `/Users/chris/src/github/eurorack` (used by 2-OP only)
 
 ## Common build pattern
 
@@ -39,6 +40,8 @@ Each project follows the same steps. Run all commands from inside the project di
 
 After building, copy the `.component` to `~/Library/Audio/Plug-Ins/Components/` and ad-hoc sign it before running `auval`. See the project `CLAUDE.md` for exact paths and AU codes.
 
+**2-OP cross-compile note**: the eurorack sources contain ARM VFP inline assembly that breaks x86_64 compilation. The `CMakeLists.txt` already passes `-DTEST=1` for the x86_64 slice, which bypasses the assembly in `stmlib/dsp/dsp.h`. Do not remove it.
+
 ## JUCE conventions (apply to all projects)
 
 - `juce_generate_juce_header(<Target>)` is required — without it `<JuceHeader.h>` is missing.
@@ -52,10 +55,12 @@ After building, copy the `.component` to `~/Library/Audio/Plug-Ins/Components/` 
 
 There are no automated tests. `auval` is the primary correctness check for every plugin. Each project `CLAUDE.md` lists the exact `auval` invocation for that plugin's AU codes.
 
+Warm also has a DSP benchmark (arm64 only) — see `Warm/CLAUDE.md`.
+
 ## Design language
 
 All plugins share the same visual style:
 - **Panel**: silver-grey `#d8d8d8`, subtle top→bottom gradient overlay (`0x18ffffff` → `0x18000000`), completely flat — no bevels or shadows
 - **Controls**: matte-black (`#111111`) with white indicator lines/hairlines
 - **Labels**: 10–13pt bold, dark grey, all-caps where used for parameter names
-- Each project's `design/` folder contains an SVG mockup of the UI
+- Each project's `design/` folder contains SVG mockups of the UI
