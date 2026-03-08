@@ -7,9 +7,9 @@ set(EURORACK /Users/chris/src/github/eurorack)
 
 juce_add_plugin(TwoOpFM
     COMPANY_NAME            "CorvidAudio"
-    PLUGIN_MANUFACTURER_CODE CVDA
-    PLUGIN_CODE             TWOP
-    FORMATS                 AU Standalone
+    PLUGIN_MANUFACTURER_CODE Cvda
+    PLUGIN_CODE             Twop
+    FORMATS                 AU VST3 Standalone
     IS_SYNTH                TRUE
     NEEDS_MIDI_INPUT        TRUE
     NEEDS_MIDI_OUTPUT       FALSE

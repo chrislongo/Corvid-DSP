@@ -220,7 +220,7 @@ void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::Font (juce::FontOptions().withHeight (7.5f).withStyle ("Bold")));
     g.drawText ("FM SYNTHESIZER", 0, 14, getWidth() - 23, 14, juce::Justification::bottomRight);
 
-    g.setColour (juce::Colour (0xff999999));
+    g.setColour (juce::Colour (0xff777777));
     g.setFont (juce::Font (juce::FontOptions().withHeight (7.5f)));
     g.drawText ("OPERATOR MODEL: 2-OP / FEEDBACK", 0, 28, getWidth() - 23, 14, juce::Justification::bottomRight);
 

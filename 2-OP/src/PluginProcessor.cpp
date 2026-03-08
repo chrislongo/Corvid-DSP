@@ -33,7 +33,7 @@ TwoOpFMAudioProcessor::createParameterLayout()
 
     // Envelope parameters (times in seconds, skewed so fine control is at the short end)
     using Range = juce::NormalisableRange<float>;
-    layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.001f, 2.0f, 0.0f, 0.3f), 0.008f));
+    layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.005f, 2.0f, 0.0f, 0.3f), 0.010f));
     layout.add (std::make_unique<APF> ("decay",   "Decay",   Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
     layout.add (std::make_unique<APF> ("sustain", "Sustain", 0.0f, 1.0f, 1.0f));
     layout.add (std::make_unique<APF> ("release", "Release", Range (0.005f, 4.0f, 0.0f, 0.3f), 0.005f));
