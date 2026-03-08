@@ -20,7 +20,7 @@ public:
                            juce::Slider::SliderStyle,
                            juce::Slider&) override;
 
-    int getSliderThumbRadius (juce::Slider&) override { return 5; }  // kThumbH / 2
+    int getSliderThumbRadius (juce::Slider&) override { return 6; }  // kThumbH / 2
 };
 
 //==============================================================================
@@ -56,13 +56,13 @@ private:
     juce::Slider ratioSlider_, indexSlider_, feedbackSlider_, subSlider_;
     juce::Label  ratioLabel_,  indexLabel_,  feedbackLabel_,  subLabel_;
 
-    // ADSR knobs (bottom section)
-    juce::Slider attackSlider_, decaySlider_, sustainSlider_, releaseSlider_;
-    juce::Label  attackLabel_,  decayLabel_,  sustainLabel_,  releaseLabel_;
+    // ADSR + Output knobs (bottom section)
+    juce::Slider attackSlider_, decaySlider_, sustainSlider_, releaseSlider_, outputSlider_;
+    juce::Label  attackLabel_,  decayLabel_,  sustainLabel_,  releaseLabel_,  outputLabel_;
 
     juce::AudioProcessorValueTreeState::SliderAttachment
         ratioAttach_, indexAttach_, feedbackAttach_, subAttach_,
-        attackAttach_, decayAttach_, sustainAttach_, releaseAttach_;
+        attackAttach_, decayAttach_, sustainAttach_, releaseAttach_, outputAttach_;
 
     void setupSlider (juce::Slider& s, juce::Label& nameLabel, const juce::String& name);
     void setupKnob   (juce::Slider& s, juce::Label& nameLabel, const juce::String& name);

@@ -36,9 +36,10 @@ struct ADSREnv
         switch (state)
         {
         case Attack: {
-            const float step = (a > 0.0f) ? 1.0f / (a * sr) : 1.0f;
-            level = std::min (level + step, 1.0f);
-            if (level >= 1.0f) state = Decay;
+            // Exponential approach to 1.0 — sounds natural and prevents onset clicks.
+            const float coeff = (a > 0.0f) ? std::exp (-1.0f / (a * sr)) : 0.0f;
+            level = 1.0f - (1.0f - level) * coeff;
+            if (level >= 0.999f) { level = 1.0f; state = Decay; }
             break;
         }
         case Decay: {

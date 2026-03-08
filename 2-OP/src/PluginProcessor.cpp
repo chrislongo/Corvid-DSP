@@ -33,10 +33,13 @@ TwoOpFMAudioProcessor::createParameterLayout()
 
     // Envelope parameters (times in seconds, skewed so fine control is at the short end)
     using Range = juce::NormalisableRange<float>;
-    layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.001f, 2.0f, 0.0f, 0.3f), 0.008f));
+    layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.005f, 2.0f, 0.0f, 0.3f), 0.010f));
     layout.add (std::make_unique<APF> ("decay",   "Decay",   Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
     layout.add (std::make_unique<APF> ("sustain", "Sustain", 0.0f, 1.0f, 1.0f));
     layout.add (std::make_unique<APF> ("release", "Release", Range (0.005f, 4.0f, 0.0f, 0.3f), 0.005f));
+
+    // Output level in dB
+    layout.add (std::make_unique<APF> ("output", "Output", -40.0f, 0.0f, -12.0f));
 
     return layout;
 }
@@ -80,6 +83,9 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const float sus = *apvts.getRawParameterValue ("sustain");
     const float rel = *apvts.getRawParameterValue ("release");
     const float sr  = (float) getSampleRate();
+
+    const float outputGain = juce::Decibels::decibelsToGain (
+        apvts.getRawParameterValue ("output")->load());
 
     // Update FM smoother targets.
     ratio_smoothed_   .setTargetValue (*apvts.getRawParameterValue ("ratio"));
@@ -129,7 +135,7 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                 const float vel_amp = velocity_smoothed_.getNextValue();
                 // 0.6f matches the out_gain/aux_gain Plaits applies to FMEngine in its voice.
                 const float s = std::clamp ((out_[i] * 0.6f + sub_val * aux_[i] * 0.6f) * env_amp * vel_amp,
-                                            -1.0f, 1.0f);
+                                            -1.0f, 1.0f) * outputGain;
                 left [offset + i] = s;
                 if (right != nullptr)
                     right[offset + i] = s;

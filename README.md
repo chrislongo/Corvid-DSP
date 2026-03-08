@@ -90,7 +90,7 @@ cmake --build build --config Release
 cp -R build/TwoOpFM_artefacts/Release/AU/2-OP.component \
       ~/Library/Audio/Plug-Ins/Components/
 codesign --force --sign - ~/Library/Audio/Plug-Ins/Components/2-OP.component
-auval -v aumu TWOP CVDA
+auval -v aumu Twop Cvda
 ```
 
 ### Dist308
