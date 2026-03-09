@@ -32,16 +32,16 @@ namespace {
     constexpr int kFMLabelW    = 80;
 
     // ── Knob geometry ──────────────────────────────────────────────────────
-    constexpr int   kKnobR     = 20;
-    constexpr int   kKnobCY    = 373;
-    constexpr int   kKnobW     = kKnobR * 2 + 4;   // 44
+    constexpr int   kKnobR     = 26;
+    constexpr int   kKnobCY    = 372;
+    constexpr int   kKnobW     = kKnobR * 2 + 4;   // 56
 
     // Rotary sweep: −135° to +135° from 12 o'clock (270° total).
     constexpr float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
     constexpr float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
 
     // Knob label
-    constexpr int kKnobLabelY  = 408;
+    constexpr int kKnobLabelY  = 402;
     constexpr int kKnobLabelH  = 14;
     constexpr int kKnobLabelW  = 80;
 }
@@ -120,8 +120,8 @@ void ADSRKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
     const float cosA  = std::cos (angle);
 
     juce::Path indicator;
-    indicator.startNewSubPath (cx + sinA * 7.5f,  cy - cosA * 7.5f);
-    indicator.lineTo           (cx + sinA * 18.0f, cy - cosA * 18.0f);
+    indicator.startNewSubPath (cx + sinA * 9.75f,  cy - cosA * 9.75f);
+    indicator.lineTo           (cx + sinA * 23.4f,  cy - cosA * 23.4f);
 
     g.setColour (juce::Colours::white);
     g.strokePath (indicator,
