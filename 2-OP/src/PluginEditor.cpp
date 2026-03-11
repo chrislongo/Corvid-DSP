@@ -34,14 +34,14 @@ namespace {
     // ── Knob geometry ──────────────────────────────────────────────────────
     constexpr int   kKnobR     = 26;
     constexpr int   kKnobCY    = 372;
-    constexpr int   kKnobW     = kKnobR * 2 + 4;   // 56
+    constexpr int   kKnobW     = kKnobR * 2 + 24;  // 76 — extra margin for tick marks
 
     // Rotary sweep: −135° to +135° from 12 o'clock (270° total).
     constexpr float kRotaryStart = juce::MathConstants<float>::pi * 1.25f;
     constexpr float kRotaryEnd   = juce::MathConstants<float>::pi * 2.75f;
 
     // Knob label
-    constexpr int kKnobLabelY  = 402;
+    constexpr int kKnobLabelY  = 412;
     constexpr int kKnobLabelH  = 14;
     constexpr int kKnobLabelW  = 80;
 }
@@ -109,6 +109,20 @@ void ADSRKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
     const float cx = x + width  * 0.5f;
     const float cy = y + height * 0.5f;
     const float r  = (float) kKnobR;
+
+    // ── Tick marks ───────────────────────────────────────────────────────────
+    constexpr int kNumTicks = 9;
+    g.setColour (juce::Colour (0xff888888));
+    for (int i = 0; i < kNumTicks; ++i)
+    {
+        const float t     = (float) i / (float) (kNumTicks - 1);
+        const float angle = rotaryStartAngle + t * (rotaryEndAngle - rotaryStartAngle);
+        const float sinA  = std::sin (angle);
+        const float cosA  = std::cos (angle);
+        g.drawLine (cx + sinA * (r + 4.0f),  cy - cosA * (r + 4.0f),
+                    cx + sinA * (r + 10.0f), cy - cosA * (r + 10.0f),
+                    1.0f);
+    }
 
     // ── Body ─────────────────────────────────────────────────────────────────
     g.setColour (juce::Colour (0xff111111));
@@ -270,7 +284,7 @@ void TwoOpFMAudioProcessorEditor::resized()
     for (int i = 0; i < 5; ++i)
     {
         const int cx = kKnobColX[i];
-        knobs    [i]->setBounds (cx - kKnobW / 2, kKnobCY - kKnobR - 2, kKnobW, kKnobW);
+        knobs    [i]->setBounds (cx - kKnobW / 2, kKnobCY - kKnobW / 2, kKnobW, kKnobW);
         knobNames[i]->setBounds (cx - kKnobLabelW / 2, kKnobLabelY, kKnobLabelW, kKnobLabelH);
     }
 }
