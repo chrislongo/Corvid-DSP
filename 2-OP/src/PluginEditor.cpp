@@ -111,7 +111,7 @@ void ADSRKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
     const float r  = (float) kKnobR;
 
     // ── Tick marks ───────────────────────────────────────────────────────────
-    constexpr int kNumTicks = 9;
+    constexpr int kNumTicks = 7;
     g.setColour (juce::Colour (0xff888888));
     for (int i = 0; i < kNumTicks; ++i)
     {
