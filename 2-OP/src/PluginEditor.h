@@ -39,6 +39,29 @@ public:
 };
 
 //==============================================================================
+// FMSlider — juce::Slider with Shift-key fine-tune (1/10 sensitivity)
+class FMSlider : public juce::Slider
+{
+public:
+    using juce::Slider::Slider;
+
+    void mouseDrag (const juce::MouseEvent& e) override
+    {
+        if (e.mods.isShiftDown())
+        {
+            constexpr float kFineDivisor = 5.0f;
+            const auto finePt = e.mouseDownPosition
+                                + (e.position - e.mouseDownPosition) / kFineDivisor;
+            juce::Slider::mouseDrag (e.withNewPosition (finePt));
+        }
+        else
+        {
+            juce::Slider::mouseDrag (e);
+        }
+    }
+};
+
+//==============================================================================
 class TwoOpFMAudioProcessorEditor : public juce::AudioProcessorEditor
 {
 public:
@@ -53,11 +76,11 @@ private:
     ADSRKnobLookAndFeel knobLAF_;
 
     // FM sliders (top section)
-    juce::Slider ratioSlider_, indexSlider_, feedbackSlider_, subSlider_;
+    FMSlider ratioSlider_, indexSlider_, feedbackSlider_, subSlider_;
     juce::Label  ratioLabel_,  indexLabel_,  feedbackLabel_,  subLabel_;
 
     // ADSR + Output knobs (bottom section)
-    juce::Slider attackSlider_, decaySlider_, sustainSlider_, releaseSlider_, outputSlider_;
+    FMSlider attackSlider_, decaySlider_, sustainSlider_, releaseSlider_, outputSlider_;
     juce::Label  attackLabel_,  decayLabel_,  sustainLabel_,  releaseLabel_,  outputLabel_;
 
     juce::AudioProcessorValueTreeState::SliderAttachment
