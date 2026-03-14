@@ -1,3 +1,5 @@
+<img src="docs/corvid.png" width="64" alt="Corvid Audio"/>
+
 # DSP Plugins
 
 A collection of macOS Audio Unit plugins built with [JUCE](https://juce.com).
