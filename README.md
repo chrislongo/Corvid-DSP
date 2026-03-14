@@ -1,14 +1,14 @@
 <img src="docs/corvid.png" width="64" alt="Corvid Audio"/>
 
-# DSP Plugins
+# Corvid Audio - DSP Plugins
 
-A collection of macOS Audio Unit plugins built with [JUCE](https://juce.com).
+A collection of AU and VST3 plugins built with [JUCE](https://juce.com).
 
 | Plugin | Type | Description |
 |--------|------|-------------|
-| [2-OP](#2-op) | AU Instrument | 2-operator FM synthesizer |
-| [Dist308](#dist308) | AU Effect | ProCo Rat-inspired distortion |
-| [Warm](#warm) | AU Effect | Odd-harmonic tanh waveshaper |
+| [2-OP](#2-op) | Instrument | 2-operator FM synthesizer |
+| [Dist308](#dist308) | Effect | ProCo Rat-inspired distortion |
+| [Warm](#warm) | Effect | Odd-harmonic tanh waveshaper |
 
 ---
 
@@ -43,7 +43,7 @@ Hold Shift while dragging any slider for fine-tune resolution.
 - **Outlined (Gate)**: LPG follows the MIDI gate. Attack ramps to velocity on note-on; release decays on note-off.
 - **Filled (Ping)**: Each note-on fires a single pitch-proportional impulse into the vactrol, which then decays freely. Holding a key has no effect — every note is a transient.
 
-**Format**: AU Instrument (`aumu`) · `com.CorvidAudio.TwoOpFM`
+**Formats**: AU Instrument (`aumu`) · VST3 · `com.CorvidAudio.TwoOpFM`
 
 ---
 
@@ -103,11 +103,16 @@ cmake -B build -G Ninja \
     -DCMAKE_CXX_COMPILER=$(xcrun -f clang++)
 cmake --build build --config Release
 
-# Install and validate
+# Install AU and validate
 cp -R build/TwoOpFM_artefacts/Release/AU/2-OP.component \
       ~/Library/Audio/Plug-Ins/Components/
 codesign --force --sign - ~/Library/Audio/Plug-Ins/Components/2-OP.component
 auval -v aumu Twop Cvda
+
+# Install VST3
+cp -R build/TwoOpFM_artefacts/Release/VST3/2-OP.vst3 \
+      ~/Library/Audio/Plug-Ins/VST3/
+codesign --force --sign - ~/Library/Audio/Plug-Ins/VST3/2-OP.vst3
 ```
 
 ### Dist308
