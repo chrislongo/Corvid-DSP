@@ -9,8 +9,8 @@ namespace {
     // Evenly distributed; Sub aligns with Output knob (col 5).
     constexpr int kFMColX[]   = { 83, 209, 336, 463 };
 
-    // ── Knob columns: Attack, Decay, Sustain, Release, Output ──────────────
-    constexpr int kKnobColX[] = { 83, 178, 273, 368, 463 };
+    // ── Knob columns: Attack, Decay, Color, Output ─────────────────────────
+    constexpr int kKnobColX[] = { 83, 210, 337, 463 };
 
     // ── FM slider geometry ─────────────────────────────────────────────────
     constexpr int kTrackTop    = 95;
@@ -44,6 +44,17 @@ namespace {
     constexpr int kKnobLabelY  = 412;
     constexpr int kKnobLabelH  = 14;
     constexpr int kKnobLabelW  = 80;
+
+    // ── LPG section header ─────────────────────────────────────────────────
+    constexpr int kLPGHeaderY  = 304;
+    constexpr int kLPGHeaderH  = 14;
+
+    // ── Ping pill ──────────────────────────────────────────────────────────
+    constexpr int kPillW       = 38;
+    constexpr int kPillH       = 11;
+    // bottomLeft label text visual center sits ~9px into the 14px header rect;
+    // offset pill so its centre matches.
+    constexpr int kPillYOffset = 9 - kPillH / 2;  // = 3
 }
 
 //==============================================================================
@@ -145,6 +156,37 @@ void ADSRKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
 }
 
 //==============================================================================
+// PillLookAndFeel
+//==============================================================================
+
+void PillLookAndFeel::drawToggleButton (juce::Graphics& g, juce::ToggleButton& b,
+                                        bool, bool)
+{
+    const float w      = (float) b.getWidth();
+    const float h      = (float) b.getHeight();
+    const float corner = h * 0.42f;
+
+    if (b.getToggleState())
+    {
+        // PING: filled matte-black pill
+        g.setColour (juce::Colour (0xff111111));
+        g.fillRoundedRectangle (0.0f, 0.0f, w, h, corner);
+        g.setColour (juce::Colours::white);
+    }
+    else
+    {
+        // GATE: outlined pill on panel background
+        g.setColour (juce::Colour (0xff888888));
+        g.drawRoundedRectangle (0.5f, 0.5f, w - 1.0f, h - 1.0f, corner, 1.0f);
+        g.setColour (juce::Colour (0xff444444));
+    }
+
+    g.setFont (juce::Font (juce::FontOptions().withHeight (7.5f).withStyle ("Bold")));
+    g.drawText ("PING",
+                0, 0, (int) w, (int) h, juce::Justification::centred);
+}
+
+//==============================================================================
 // TwoOpFMAudioProcessorEditor
 //==============================================================================
 
@@ -156,9 +198,9 @@ TwoOpFMAudioProcessorEditor::TwoOpFMAudioProcessorEditor (TwoOpFMAudioProcessor&
       subAttach_     (p.apvts, "sub",      subSlider_),
       attackAttach_  (p.apvts, "attack",   attackSlider_),
       decayAttach_   (p.apvts, "decay",    decaySlider_),
-      sustainAttach_ (p.apvts, "sustain",  sustainSlider_),
-      releaseAttach_ (p.apvts, "release",  releaseSlider_),
-      outputAttach_  (p.apvts, "output",   outputSlider_)
+      colorAttach_   (p.apvts, "color",    colorSlider_),
+      outputAttach_  (p.apvts, "output",   outputSlider_),
+      pingAttach_    (p.apvts, "ping",     pingButton_)
 {
     setSize (545, 455);
 
@@ -167,20 +209,23 @@ TwoOpFMAudioProcessorEditor::TwoOpFMAudioProcessorEditor (TwoOpFMAudioProcessor&
     setupSlider (feedbackSlider_, feedbackLabel_, "Feedback");
     setupSlider (subSlider_,      subLabel_,      "Sub");
 
-    setupKnob (attackSlider_,  attackLabel_,  "Attack");
-    setupKnob (decaySlider_,   decayLabel_,   "Decay");
-    setupKnob (sustainSlider_, sustainLabel_, "Sustain");
-    setupKnob (releaseSlider_, releaseLabel_, "Release");
-    setupKnob (outputSlider_,  outputLabel_,  "Output");
+    setupKnob (attackSlider_, attackLabel_, "Attack");
+    setupKnob (decaySlider_,  decayLabel_,  "Decay");
+    setupKnob (colorSlider_, colorLabel_, "Color");
+    setupKnob (outputSlider_, outputLabel_, "Output");
+
+    pingButton_.setClickingTogglesState (true);
+    pingButton_.setLookAndFeel (&pillLAF_);
+    addAndMakeVisible (pingButton_);
 }
 
 TwoOpFMAudioProcessorEditor::~TwoOpFMAudioProcessorEditor()
 {
     juce::Slider* all[] = { &ratioSlider_, &indexSlider_, &feedbackSlider_, &subSlider_,
-                             &attackSlider_, &decaySlider_, &sustainSlider_, &releaseSlider_,
-                             &outputSlider_ };
+                             &attackSlider_, &decaySlider_, &colorSlider_, &outputSlider_ };
     for (auto* s : all)
         s->setLookAndFeel (nullptr);
+    pingButton_.setLookAndFeel (nullptr);
 }
 
 void TwoOpFMAudioProcessorEditor::setupSlider (juce::Slider& s, juce::Label& nameLabel,
@@ -258,13 +303,14 @@ void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colour (0xff555555));
     g.setFont (juce::Font (juce::FontOptions().withHeight (8.0f).withStyle ("Bold")));
-    g.drawText ("ENVELOPE + OUTPUT", 28, 303, 250, 14, juce::Justification::bottomLeft);
+    g.drawText ("LPG + OUTPUT", 28, kLPGHeaderY, 250, kLPGHeaderH, juce::Justification::bottomLeft);
+
 }
 
 void TwoOpFMAudioProcessorEditor::resized()
 {
     static_assert (std::size (kFMColX)   == 4, "");
-    static_assert (std::size (kKnobColX) == 5, "");
+    static_assert (std::size (kKnobColX) == 4, "");
 
     juce::Slider* fmSliders[] = { &ratioSlider_, &indexSlider_, &feedbackSlider_, &subSlider_ };
     juce::Label*  fmNames[]   = { &ratioLabel_,  &indexLabel_,  &feedbackLabel_,  &subLabel_ };
@@ -276,15 +322,16 @@ void TwoOpFMAudioProcessorEditor::resized()
         fmNames  [i]->setBounds (cx - kFMLabelW / 2, kFMLabelY, kFMLabelW, kFMLabelH);
     }
 
-    juce::Slider* knobs[]     = { &attackSlider_, &decaySlider_, &sustainSlider_,
-                                   &releaseSlider_, &outputSlider_ };
-    juce::Label*  knobNames[] = { &attackLabel_,  &decayLabel_,  &sustainLabel_,
-                                   &releaseLabel_,  &outputLabel_ };
+    juce::Slider* knobs[]     = { &attackSlider_, &decaySlider_, &colorSlider_, &outputSlider_ };
+    juce::Label*  knobNames[] = { &attackLabel_,  &decayLabel_,  &colorLabel_,  &outputLabel_ };
 
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         const int cx = kKnobColX[i];
         knobs    [i]->setBounds (cx - kKnobW / 2, kKnobCY - kKnobW / 2, kKnobW, kKnobW);
         knobNames[i]->setBounds (cx - kKnobLabelW / 2, kKnobLabelY, kKnobLabelW, kKnobLabelH);
     }
+
+    // Pill toggle: centered on Decay knob column, vertically centered in label row.
+    pingButton_.setBounds (kKnobColX[1] - kPillW / 2, kLPGHeaderY + kPillYOffset, kPillW, kPillH);
 }

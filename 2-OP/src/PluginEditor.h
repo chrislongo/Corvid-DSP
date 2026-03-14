@@ -39,6 +39,17 @@ public:
 };
 
 //==============================================================================
+// PillLookAndFeel
+// Single pill toggle: outlined/grey = GATE (default), filled matte-black = PING.
+class PillLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    void drawToggleButton (juce::Graphics&, juce::ToggleButton&,
+                           bool shouldDrawButtonAsHighlighted,
+                           bool shouldDrawButtonAsDown) override;
+};
+
+//==============================================================================
 // FMSlider — juce::Slider with Shift-key fine-tune (1/10 sensitivity)
 class FMSlider : public juce::Slider
 {
@@ -49,7 +60,7 @@ public:
     {
         if (e.mods.isShiftDown())
         {
-            constexpr float kFineDivisor = 5.0f;
+            constexpr float kFineDivisor = 2.5f;
             const auto finePt = e.mouseDownPosition
                                 + (e.position - e.mouseDownPosition) / kFineDivisor;
             juce::Slider::mouseDrag (e.withNewPosition (finePt));
@@ -74,18 +85,22 @@ public:
 private:
     FMSliderLookAndFeel sliderLAF_;
     ADSRKnobLookAndFeel knobLAF_;
+    PillLookAndFeel     pillLAF_;
 
     // FM sliders (top section)
     FMSlider ratioSlider_, indexSlider_, feedbackSlider_, subSlider_;
     juce::Label  ratioLabel_,  indexLabel_,  feedbackLabel_,  subLabel_;
 
-    // ADSR + Output knobs (bottom section)
-    FMSlider attackSlider_, decaySlider_, sustainSlider_, releaseSlider_, outputSlider_;
-    juce::Label  attackLabel_,  decayLabel_,  sustainLabel_,  releaseLabel_,  outputLabel_;
+    // LPG + Output knobs (bottom section)
+    FMSlider attackSlider_, decaySlider_, colorSlider_, outputSlider_;
+    juce::Label  attackLabel_,  decayLabel_,  colorLabel_,  outputLabel_;
+
+    juce::ToggleButton pingButton_;
 
     juce::AudioProcessorValueTreeState::SliderAttachment
         ratioAttach_, indexAttach_, feedbackAttach_, subAttach_,
-        attackAttach_, decayAttach_, sustainAttach_, releaseAttach_, outputAttach_;
+        attackAttach_, decayAttach_, colorAttach_, outputAttach_;
+    juce::AudioProcessorValueTreeState::ButtonAttachment pingAttach_;
 
     void setupSlider (juce::Slider& s, juce::Label& nameLabel, const juce::String& name);
     void setupKnob   (juce::Slider& s, juce::Label& nameLabel, const juce::String& name);

@@ -31,12 +31,12 @@ TwoOpFMAudioProcessor::createParameterLayout()
     layout.add (std::make_unique<APF> ("feedback", "Feedback", 0.0f, 1.0f,  0.5f));
     layout.add (std::make_unique<APF> ("sub",      "Sub",      0.0f, 1.0f,  0.0f));
 
-    // Envelope parameters (times in seconds, skewed so fine control is at the short end)
+    // LPG parameters
     using Range = juce::NormalisableRange<float>;
     layout.add (std::make_unique<APF> ("attack",  "Attack",  Range (0.005f, 2.0f, 0.0f, 0.3f), 0.010f));
-    layout.add (std::make_unique<APF> ("decay",   "Decay",   Range (0.001f, 4.0f, 0.0f, 0.3f), 0.001f));
-    layout.add (std::make_unique<APF> ("sustain", "Sustain", 0.0f, 1.0f, 1.0f));
-    layout.add (std::make_unique<APF> ("release", "Release", Range (0.005f, 4.0f, 0.0f, 0.3f), 0.005f));
+    layout.add (std::make_unique<APF> ("decay",   "Decay",   0.0f, 1.0f, 0.5f));
+    layout.add (std::make_unique<APF> ("color",  "Color",  0.0f, 1.0f, 0.0f));
+    layout.add (std::make_unique<juce::AudioParameterBool> ("ping", "Ping Mode", false));
 
     // Output level in dB
     layout.add (std::make_unique<APF> ("output", "Output", -40.0f, 0.0f, -12.0f));
@@ -52,7 +52,10 @@ void TwoOpFMAudioProcessor::prepareToPlay (double sampleRate, int)
 
     pitch_correction_ = 12.0f * std::log2f (kPlaitsHardwareSampleRate / (float) sampleRate);
 
-    env_.reset();
+    lpg_envelope_.Init();
+    lpg_.Init();
+    lpg_gate_level_  = 0.0f;
+    lpg_gate_target_ = 0.0f;
     trigger_ = plaits::TRIGGER_LOW;
 
     const double ramp = 0.02;
@@ -65,9 +68,6 @@ void TwoOpFMAudioProcessor::prepareToPlay (double sampleRate, int)
     index_smoothed_   .setCurrentAndTargetValue (*apvts.getRawParameterValue ("index"));
     feedback_smoothed_.setCurrentAndTargetValue (*apvts.getRawParameterValue ("feedback"));
     sub_smoothed_     .setCurrentAndTargetValue (*apvts.getRawParameterValue ("sub"));
-
-    velocity_smoothed_.reset (sampleRate, 0.005);  // 5 ms ramp
-    velocity_smoothed_.setCurrentAndTargetValue (velocity_);
 }
 
 //==============================================================================
@@ -77,15 +77,26 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
-    // Read ADSR params once per block (envelope itself provides smooth amplitude).
-    const float atk = *apvts.getRawParameterValue ("attack");
-    const float dcy = *apvts.getRawParameterValue ("decay");
-    const float sus = *apvts.getRawParameterValue ("sustain");
-    const float rel = *apvts.getRawParameterValue ("release");
-    const float sr  = (float) getSampleRate();
+    // Read LPG params once per block.
+    const float atk    = *apvts.getRawParameterValue ("attack");
+    const float decay  = *apvts.getRawParameterValue ("decay");
+    const float colour = *apvts.getRawParameterValue ("color");
+    const bool pingMode = *apvts.getRawParameterValue ("ping") > 0.5f;
+    const float sr     = (float) getSampleRate();
 
     const float outputGain = juce::Decibels::decibelsToGain (
         apvts.getRawParameterValue ("output")->load());
+
+    // Plaits LPG decay formula (same as voice.cc).
+    const float short_decay = (200.0f * (float) plaits::kBlockSize) / sr
+                              * std::exp2f (-96.0f * decay / 12.0f);
+    const float decay_tail  = (20.0f  * (float) plaits::kBlockSize) / sr
+                              * std::exp2f ((-72.0f * decay + 12.0f * colour) / 12.0f)
+                              - short_decay;
+
+    // Attack ramp rate: how much lpg_gate_level_ advances per 12-sample block.
+    const float blockRate  = sr / (float) plaits::kBlockSize;
+    const float atk_step   = (atk > 0.0f) ? (1.0f / (atk * blockRate)) : 1.0f;
 
     // Update FM smoother targets.
     ratio_smoothed_   .setTargetValue (*apvts.getRawParameterValue ("ratio"));
@@ -97,6 +108,9 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     const int numCh = buffer.getNumChannels();
     float* left  = buffer.getWritePointer (0);
     float* right = numCh > 1 ? buffer.getWritePointer (1) : nullptr;
+
+    // Returns true while the LPG is still producing audible output.
+    auto lpgActive = [&] { return gate_ || lpg_envelope_.gain() > 0.001f; };
 
     // Renders samples [start, end) using current voice state.
     auto renderSegment = [&] (int start, int end)
@@ -129,13 +143,37 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
             if (trigger_ == plaits::TRIGGER_RISING_EDGE)
                 trigger_ = plaits::TRIGGER_HIGH;
 
+            if (pingMode)
+            {
+                // Pitch-proportional attack (higher notes ping faster, like Plaits).
+                const float ping_attack = std::exp2f ((float) (sounding_note_ - 69) / 12.0f)
+                                          * 440.0f / sr * (float) plaits::kBlockSize * 2.0f;
+                lpg_envelope_.ProcessPing (ping_attack, short_decay, decay_tail, colour);
+            }
+            else
+            {
+                // Ramp gate level toward target (attack) or drop instantly (note-off).
+                if (lpg_gate_target_ > lpg_gate_level_)
+                    lpg_gate_level_ = std::min (lpg_gate_level_ + atk_step, lpg_gate_target_);
+                else
+                    lpg_gate_level_ = lpg_gate_target_;
+
+                lpg_envelope_.ProcessLP (lpg_gate_level_, short_decay, decay_tail, colour);
+            }
+
+            // Blend sub into main (in-place), apply 0.6 gain to match Plaits voice level.
+            for (int i = 0; i < chunk; ++i)
+                out_[i] = (out_[i] + sub_val * aux_[i]) * 0.6f;
+
+            // Apply LPG: simultaneous VCA + VCF, interpolating gain over the chunk.
+            lpg_.Process (lpg_envelope_.gain(),
+                          lpg_envelope_.frequency(),
+                          lpg_envelope_.hf_bleed(),
+                          out_, (size_t) chunk);
+
             for (int i = 0; i < chunk; ++i)
             {
-                const float env_amp = env_.processSample (atk, dcy, sus, rel, sr);
-                const float vel_amp = velocity_smoothed_.getNextValue();
-                // 0.6f matches the out_gain/aux_gain Plaits applies to FMEngine in its voice.
-                const float s = std::clamp ((out_[i] * 0.6f + sub_val * aux_[i] * 0.6f) * env_amp * vel_amp,
-                                            -1.0f, 1.0f) * outputGain;
+                const float s = std::clamp (out_[i], -1.0f, 1.0f) * outputGain;
                 left [offset + i] = s;
                 if (right != nullptr)
                     right[offset + i] = s;
@@ -149,28 +187,29 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     {
         const int eventPos = juce::jlimit (0, total, meta.samplePosition);
 
-        if (eventPos > cursor && (gate_ || env_.active()))
+        if (eventPos > cursor && lpgActive())
             renderSegment (cursor, eventPos);
         cursor = eventPos;
 
         const auto msg = meta.getMessage();
         if (msg.isNoteOn())
         {
-            sounding_note_ = msg.getNoteNumber();
-            velocity_      = msg.getVelocity() / 127.0f;
-            velocity_smoothed_.setTargetValue (velocity_);
-            gate_          = true;
-            trigger_       = plaits::TRIGGER_RISING_EDGE;
-            env_.noteOn();
+            sounding_note_   = msg.getNoteNumber();
+            velocity_        = msg.getVelocity() / 127.0f;
+            gate_            = true;
+            trigger_         = plaits::TRIGGER_RISING_EDGE;
+            lpg_gate_target_ = velocity_;
+            if (pingMode)
+                lpg_envelope_.Trigger();
         }
         else if (msg.isNoteOff())
         {
             if (msg.getNoteNumber() == sounding_note_)
             {
-                gate_    = false;
-                trigger_ = plaits::TRIGGER_LOW;
-                env_.noteOff();
-                // Keep sounding_note_ set — engine needs a pitch during release.
+                gate_            = false;
+                trigger_         = plaits::TRIGGER_LOW;
+                lpg_gate_target_ = 0.0f;
+                // Keep sounding_note_ set — engine needs a pitch during LPG tail.
             }
         }
         else if (msg.isPitchWheel())
@@ -180,7 +219,7 @@ void TwoOpFMAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     // Render remaining samples after the last MIDI event.
-    if (cursor < total && (gate_ || env_.active()))
+    if (cursor < total && lpgActive())
         renderSegment (cursor, total);
 }
 

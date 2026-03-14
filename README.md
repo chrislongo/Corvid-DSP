@@ -14,9 +14,9 @@ A collection of macOS Audio Unit plugins built with [JUCE](https://juce.com).
 
 ![2-OP](docs/2-op.png)
 
-A monophonic 2-operator FM synthesizer. The DSP engine is the `FMEngine` from [Mutable Instruments Plaits](https://github.com/pichenettes/eurorack), adapted for standard sample rates and wrapped with a custom ADSR envelope. MIDI is handled sample-accurately; pitch bend is ±2 semitones.
+A monophonic 2-operator FM synthesizer. The DSP engine is the `FMEngine` from [Mutable Instruments Plaits](https://github.com/pichenettes/eurorack), adapted for standard sample rates. The amplitude/filter stage is a Plaits-style LPG (low-pass gate): a vactrol simulation feeding a combined SVF lowpass filter + VCA, giving the characteristic bloom and soft roll-off of a Buchla-style circuit. MIDI is handled sample-accurately; pitch bend is ±2 semitones; velocity scales both output amplitude and FM timbre.
 
-**Parameters**
+**FM Controls** (sliders)
 
 | Parameter | Description |
 |-----------|-------------|
@@ -24,7 +24,22 @@ A monophonic 2-operator FM synthesizer. The DSP engine is the `FMEngine` from [M
 | Index | Modulation depth |
 | Feedback | Operator self-feedback |
 | Sub | Blend of sub-octave carrier output |
-| Attack / Decay / Sustain / Release | Amplitude envelope (skewed time ranges for musical feel) |
+
+Hold Shift while dragging any slider for fine-tune resolution.
+
+**LPG + Output** (knobs)
+
+| Parameter | Description |
+|-----------|-------------|
+| Attack | LPG gate open time (only active in Gate mode) |
+| Decay | Vactrol release time |
+| Color | Tilt between lowpass filter and pure VCA (low = darker bloom, high = open VCA) |
+| Output | Output level (dB) |
+
+**PING toggle** — selects the LPG trigger mode:
+
+- **Outlined (Gate)**: LPG follows the MIDI gate. Attack ramps to velocity on note-on; release decays on note-off.
+- **Filled (Ping)**: Each note-on fires a single pitch-proportional impulse into the vactrol, which then decays freely. Holding a key has no effect — every note is a transient.
 
 **Format**: AU Instrument (`aumu`) · `com.CorvidAudio.TwoOpFM`
 
