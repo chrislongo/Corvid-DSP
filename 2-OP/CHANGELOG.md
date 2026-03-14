@@ -1,11 +1,11 @@
 # 2-OP Changelog
 
-### v0.4 — 2026-03-14
+### v1.0 — 2026-03-14
 - PING pill now always reads "PING"; fill state indicates mode (outlined = Gate, filled = Ping)
 - Move pill to Decay column; reduce width to 38 px; align vertically with section label text
 - Extract layout constants for LPG header and pill geometry; eliminate magic numbers
 
-### v0.4 — 2026-03-13
+### v1.0 — 2026-03-13
 - Replace ADSR with Plaits LPG (vactrol + low-pass gate)
   - New parameters: Decay (0–1 Plaits scale), Color (filter/VCA tilt), Output (dB), Ping toggle
   - Gate mode: LPG follows MIDI gate; Attack knob controls open time; velocity scales amplitude
