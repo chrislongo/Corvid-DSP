@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="545" height="455" viewBox="0 0 545 455">
+  <defs>
+    <linearGradient id="panelOverlay" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.094"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.094"/>
+    </linearGradient>
+    <!-- Reusable knob tick pattern (relative to knob center 0,0).
+         Sweep 225°→495° (1.25π→2.75π), 11 ticks, outer r=33, inner r=28. -->
+    <g id="knobTicks">
+      <!-- t=0.0  225°: sin=-0.707 cos=-0.707 -->
+      <line x1="-19.8" y1="19.8"  x2="-23.3" y2="23.3"  stroke="#888" stroke-width="1"/>
+      <!-- t=0.1  252°: sin=-0.951 cos=-0.309 -->
+      <line x1="-26.6" y1="8.65"  x2="-31.4" y2="10.2"  stroke="#888" stroke-width="1"/>
+      <!-- t=0.2  279°: sin=-0.988 cos=0.156 -->
+      <line x1="-27.7" y1="-4.38" x2="-32.6" y2="-5.16" stroke="#888" stroke-width="1"/>
+      <!-- t=0.3  306°: sin=-0.809 cos=0.588 -->
+      <line x1="-22.7" y1="-16.5" x2="-26.7" y2="-19.4" stroke="#888" stroke-width="1"/>
+      <!-- t=0.4  333°: sin=-0.454 cos=0.891 -->
+      <line x1="-12.7" y1="-24.9" x2="-15.0" y2="-29.4" stroke="#888" stroke-width="1"/>
+      <!-- t=0.5  360°: sin=0 cos=1 -->
+      <line x1="0"     y1="-28"   x2="0"     y2="-33"   stroke="#888" stroke-width="1"/>
+      <!-- t=0.6  387°: sin=0.454 cos=0.891 -->
+      <line x1="12.7"  y1="-24.9" x2="15.0"  y2="-29.4" stroke="#888" stroke-width="1"/>
+      <!-- t=0.7  414°: sin=0.809 cos=0.588 -->
+      <line x1="22.7"  y1="-16.5" x2="26.7"  y2="-19.4" stroke="#888" stroke-width="1"/>
+      <!-- t=0.8  441°: sin=0.988 cos=0.156 -->
+      <line x1="27.7"  y1="-4.38" x2="32.6"  y2="-5.16" stroke="#888" stroke-width="1"/>
+      <!-- t=0.9  468°: sin=0.951 cos=-0.309 -->
+      <line x1="26.6"  y1="8.65"  x2="31.4"  y2="10.2"  stroke="#888" stroke-width="1"/>
+      <!-- t=1.0  495°: sin=0.707 cos=-0.707 -->
+      <line x1="19.8"  y1="19.8"  x2="23.3"  y2="23.3"  stroke="#888" stroke-width="1"/>
+    </g>
+  </defs>
+
+  <!-- ── Panel background ─────────────────────────────────────────── -->
+  <rect width="545" height="455" fill="#d8d8d8"/>
+  <rect width="545" height="455" fill="url(#panelOverlay)"/>
+
+  <!-- ── Title strip ─────────────────────────────────────────────── -->
+  <text x="22" y="46" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="#111111">2-OP</text>
+  <text x="522" y="28" font-family="Arial, sans-serif" font-size="7.5" font-weight="bold" fill="#666666" text-anchor="end">FM SYNTHESIZER</text>
+  <text x="522" y="42" font-family="Arial, sans-serif" font-size="7.5" fill="#777777" text-anchor="end">OPERATOR MODEL: 2-OP / FEEDBACK</text>
+
+  <!-- ── FM CONTROLS section box ─────────────────────────────────── -->
+  <rect x="14" y="60" width="517" height="228" rx="8" fill="#d0d0d0"/>
+  <rect x="14" y="60" width="517" height="228" rx="8" fill="none" stroke="#888888" stroke-width="1.5"/>
+  <text x="28" y="82" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#555555">FM CONTROLS</text>
+
+  <!-- FM sliders: track y=95–255 (160px), track width=5, thumb 42×13
+       Columns: 83, 209, 336, 463
+       Tick marks at y = 95 + i*(160/11) for i=1..10, left (cx-9→cx-3) right (cx+3→cx+9)
+       Default thumb positions (sliderPos = 1-normalised, top=max):
+         Ratio 0.5  → y=175   Index 0.3  → y=207
+         Fdbk  0.5  → y=175   Sub   0.0  → y=255  -->
+
+  <!-- RATIO (cx=83) -->
+  <g>
+    <line x1="74" y1="109.5" x2="80" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="109.5" x2="92" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="124.0" x2="80" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="124.0" x2="92" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="138.5" x2="80" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="138.5" x2="92" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="153.0" x2="80" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="153.0" x2="92" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="167.5" x2="80" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="167.5" x2="92" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="182.0" x2="80" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="182.0" x2="92" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="196.5" x2="80" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="196.5" x2="92" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="211.0" x2="80" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="211.0" x2="92" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="225.5" x2="80" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="225.5" x2="92" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="74" y1="240.0" x2="80" y2="240.0" stroke="#888" stroke-width="1"/>
+    <line x1="86" y1="240.0" x2="92" y2="240.0" stroke="#888" stroke-width="1"/>
+    <rect x="80.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+    <rect x="62" y="168.5" width="42" height="13" fill="#111111"/>
+    <line x1="62" y1="175" x2="104" y2="175" stroke="#fff" stroke-width="1"/>
+    <text x="83" y="282" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">RATIO</text>
+  </g>
+
+  <!-- INDEX (cx=209) -->
+  <g>
+    <line x1="200" y1="109.5" x2="206" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="109.5" x2="218" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="124.0" x2="206" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="124.0" x2="218" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="138.5" x2="206" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="138.5" x2="218" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="153.0" x2="206" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="153.0" x2="218" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="167.5" x2="206" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="167.5" x2="218" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="182.0" x2="206" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="182.0" x2="218" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="196.5" x2="206" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="196.5" x2="218" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="211.0" x2="206" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="211.0" x2="218" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="225.5" x2="206" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="225.5" x2="218" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="200" y1="240.0" x2="206" y2="240.0" stroke="#888" stroke-width="1"/>
+    <line x1="212" y1="240.0" x2="218" y2="240.0" stroke="#888" stroke-width="1"/>
+    <rect x="206.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+    <rect x="188" y="200.5" width="42" height="13" fill="#111111"/>
+    <line x1="188" y1="207" x2="230" y2="207" stroke="#fff" stroke-width="1"/>
+    <text x="209" y="282" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">INDEX</text>
+  </g>
+
+  <!-- FEEDBACK (cx=336) -->
+  <g>
+    <line x1="327" y1="109.5" x2="333" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="109.5" x2="345" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="124.0" x2="333" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="124.0" x2="345" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="138.5" x2="333" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="138.5" x2="345" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="153.0" x2="333" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="153.0" x2="345" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="167.5" x2="333" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="167.5" x2="345" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="182.0" x2="333" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="182.0" x2="345" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="196.5" x2="333" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="196.5" x2="345" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="211.0" x2="333" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="211.0" x2="345" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="225.5" x2="333" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="225.5" x2="345" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="327" y1="240.0" x2="333" y2="240.0" stroke="#888" stroke-width="1"/>
+    <line x1="339" y1="240.0" x2="345" y2="240.0" stroke="#888" stroke-width="1"/>
+    <rect x="333.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+    <rect x="315" y="168.5" width="42" height="13" fill="#111111"/>
+    <line x1="315" y1="175" x2="357" y2="175" stroke="#fff" stroke-width="1"/>
+    <text x="336" y="282" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">FEEDBACK</text>
+  </g>
+
+  <!-- SUB (cx=463) -->
+  <g>
+    <line x1="454" y1="109.5" x2="460" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="109.5" x2="472" y2="109.5" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="124.0" x2="460" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="124.0" x2="472" y2="124.0" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="138.5" x2="460" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="138.5" x2="472" y2="138.5" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="153.0" x2="460" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="153.0" x2="472" y2="153.0" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="167.5" x2="460" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="167.5" x2="472" y2="167.5" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="182.0" x2="460" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="182.0" x2="472" y2="182.0" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="196.5" x2="460" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="196.5" x2="472" y2="196.5" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="211.0" x2="460" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="211.0" x2="472" y2="211.0" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="225.5" x2="460" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="225.5" x2="472" y2="225.5" stroke="#888" stroke-width="1"/>
+    <line x1="454" y1="240.0" x2="460" y2="240.0" stroke="#888" stroke-width="1"/>
+    <line x1="466" y1="240.0" x2="472" y2="240.0" stroke="#888" stroke-width="1"/>
+    <rect x="460.5" y="95" width="5" height="160" fill="#2a2a2a"/>
+    <rect x="442" y="248.5" width="42" height="13" fill="#111111"/>
+    <line x1="442" y1="255" x2="484" y2="255" stroke="#fff" stroke-width="1"/>
+    <text x="463" y="282" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">SUB</text>
+  </g>
+
+  <!-- ── LPG + OUTPUT section box ────────────────────────────────── -->
+  <rect x="14" y="296" width="517" height="149" rx="8" fill="#d0d0d0"/>
+  <rect x="14" y="296" width="517" height="149" rx="8" fill="none" stroke="#888888" stroke-width="1.5"/>
+  <text x="28" y="318" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#555555">LPG + OUTPUT</text>
+
+  <!-- PING pill — outlined (gate mode = default off) -->
+  <rect x="191" y="307" width="38" height="11" rx="4.6" fill="none" stroke="#888888" stroke-width="1"/>
+  <text x="210" y="315.5" font-family="Arial, sans-serif" font-size="7.5" font-weight="bold" fill="#444444" text-anchor="middle">PING</text>
+
+  <!-- ── Knobs (cy=372, r=26, ticks outer r=33 inner r=28) ─────────
+       Indicator: inner r=10, outer r=22
+       Angles: Attack~1.325π, Decay=2.0π(12-o-clock), Color=1.25π(SW), Output~2.3π(NE) -->
+
+  <!-- ATTACK (cx=83) — default ~0.05 norm, angle=1.325π, sin=-0.853 cos=-0.523 -->
+  <g transform="translate(83,372)">
+    <use href="#knobTicks"/>
+    <circle r="26" fill="#111111"/>
+    <line x1="-8.53" y1="5.23" x2="-18.77" y2="11.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <text x="83" y="423" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">ATTACK</text>
+
+  <!-- DECAY (cx=210) — default 0.5 norm, angle=2π (12 o'clock), sin=0 cos=1 -->
+  <g transform="translate(210,372)">
+    <use href="#knobTicks"/>
+    <circle r="26" fill="#111111"/>
+    <line x1="0" y1="-10" x2="0" y2="-22" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <text x="210" y="423" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">DECAY</text>
+
+  <!-- COLOR (cx=337) — default 0.0 norm, angle=1.25π (SW), sin=-0.707 cos=-0.707 -->
+  <g transform="translate(337,372)">
+    <use href="#knobTicks"/>
+    <circle r="26" fill="#111111"/>
+    <line x1="-7.07" y1="7.07" x2="-15.56" y2="15.56" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <text x="337" y="423" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">COLOR</text>
+
+  <!-- OUTPUT (cx=463) — default -12dB = 0.7 norm, angle=2.3π (NE), sin=0.809 cos=0.588 -->
+  <g transform="translate(463,372)">
+    <use href="#knobTicks"/>
+    <circle r="26" fill="#111111"/>
+    <line x1="8.09" y1="-5.88" x2="17.8" y2="-12.93" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <text x="463" y="423" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#444444" text-anchor="middle">OUTPUT</text>
+
+</svg>
