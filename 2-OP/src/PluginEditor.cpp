@@ -44,6 +44,17 @@ namespace {
     constexpr int kKnobLabelY  = 412;
     constexpr int kKnobLabelH  = 14;
     constexpr int kKnobLabelW  = 80;
+
+    // ── LPG section header ─────────────────────────────────────────────────
+    constexpr int kLPGHeaderY  = 304;
+    constexpr int kLPGHeaderH  = 14;
+
+    // ── Ping pill ──────────────────────────────────────────────────────────
+    constexpr int kPillW       = 38;
+    constexpr int kPillH       = 11;
+    // bottomLeft label text visual center sits ~9px into the 14px header rect;
+    // offset pill so its centre matches.
+    constexpr int kPillYOffset = 9 - kPillH / 2;  // = 3
 }
 
 //==============================================================================
@@ -171,7 +182,7 @@ void PillLookAndFeel::drawToggleButton (juce::Graphics& g, juce::ToggleButton& b
     }
 
     g.setFont (juce::Font (juce::FontOptions().withHeight (7.5f).withStyle ("Bold")));
-    g.drawText (b.getToggleState() ? "PING" : "GATE",
+    g.drawText ("PING",
                 0, 0, (int) w, (int) h, juce::Justification::centred);
 }
 
@@ -292,7 +303,7 @@ void TwoOpFMAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colour (0xff555555));
     g.setFont (juce::Font (juce::FontOptions().withHeight (8.0f).withStyle ("Bold")));
-    g.drawText ("LPG + OUTPUT", 28, 304, 250, 14, juce::Justification::bottomLeft);
+    g.drawText ("LPG + OUTPUT", 28, kLPGHeaderY, 250, kLPGHeaderH, juce::Justification::bottomLeft);
 
 }
 
@@ -321,6 +332,6 @@ void TwoOpFMAudioProcessorEditor::resized()
         knobNames[i]->setBounds (cx - kKnobLabelW / 2, kKnobLabelY, kKnobLabelW, kKnobLabelH);
     }
 
-    // Pill toggle: centered on Output knob column, vertically centered in label row.
-    pingButton_.setBounds (463 - 28, 304 + (14 - 11) / 2, 56, 11);
+    // Pill toggle: centered on Decay knob column, vertically centered in label row.
+    pingButton_.setBounds (kKnobColX[1] - kPillW / 2, kLPGHeaderY + kPillYOffset, kPillW, kPillH);
 }
