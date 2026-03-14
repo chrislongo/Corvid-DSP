@@ -1,5 +1,8 @@
 # 2-OP Changelog
 
+### v1.1 — 2026-03-14
+- Add VST3 format target
+
 ### v1.0 — 2026-03-14
 - PING pill now always reads "PING"; fill state indicates mode (outlined = Gate, filled = Ping)
 - Move pill to Decay column; reduce width to 38 px; align vertically with section label text

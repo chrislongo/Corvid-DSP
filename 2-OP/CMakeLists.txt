@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(TwoOpFM VERSION 0.1.0)
+project(TwoOpFM VERSION 1.1.0)
 
 add_subdirectory(/Users/chris/src/github/JUCE JUCE)
 
